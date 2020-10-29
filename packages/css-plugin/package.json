@@ -1,5 +1,5 @@
 {
-  "name": "@useparcel/tape-utils",
+  "name": "@useparcel/tape-css-plugin",
   "version": "0.0.1",
   "description": "",
   "main": "index.js",
@@ -9,8 +9,6 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "cheerio": "^0.22.0",
-    "lodash": "^4.17.20",
-    "@useparcel/tape-html-plugin": "*"
-  }  
+    "is-absolute-url": "^3.0.3"
+  }
 }

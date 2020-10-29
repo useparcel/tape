@@ -14,6 +14,7 @@ module.exports = function walk(html, query = '*', walk = () => {}) {
   return $(query).toArray().forEach((node) => {
     const { startIndex, endIndex } = node
     const raw = html.substring(startIndex, endIndex+1)
+    const content = $(node).text()
     return walk({
       tag: node.name,
       attrs: isEmpty(node.attribs) ? undefined : mapValues(node.attribs, (value, key) => {
@@ -24,7 +25,14 @@ module.exports = function walk(html, query = '*', walk = () => {}) {
       }),
       startIndex,
       endIndex,
-      raw
+      raw,
+      content: {
+        offset: {
+          start: startIndex + raw.indexOf(content),
+          end: startIndex + raw.indexOf(content) + content.length - 1,
+        },
+        value: content
+      }
     })
   })
 }

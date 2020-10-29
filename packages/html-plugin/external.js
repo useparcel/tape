@@ -1,4 +1,5 @@
 const walk = require('@useparcel/tape-utils/walk-html')
+const isAbsoluteUrl = require('is-absolute-url')
 
 //https://github.com/parcel-bundler/parcel/blob/v2/packages/transformers/html/src/dependencies.js#L7
 // A list of all attributes that may produce a dependency
@@ -61,9 +62,9 @@ const META = {
   ],
 };
 
-module.exports = ({ file, addDependency, content }) => {
+module.exports = ({ asset, addDependency, content }) => {
   let urlDependencyIndexes = []
-  walk(file.content, (node) => {
+  walk(asset.content, (node) => {
     const { tag, attrs } = node
     if (!attrs) {
       return false;
@@ -87,18 +88,22 @@ module.exports = ({ file, addDependency, content }) => {
 
     for (let attr in attrs) {
       // Check for virtual paths
-      if (tag === 'a' && attrs[attr].lastIndexOf('.') < 1) {
+      if (tag === 'a' && attrs[attr].value.lastIndexOf('.') < 1) {
         continue;
       }
 
       // Check for id references
-      if (attrs[attr][0] === '#') {
+      if (attrs[attr].value[0] === '#') {
+        continue;
+      }
+
+      if (isAbsoluteUrl(attrs[attr].value)) {
         continue;
       }
 
       let elements = ATTRS[attr];
       if (elements && elements.includes(node.tag)) {
-        addDependency(attrs[attr].value, { type: 'url' })
+        addDependency({ path: attrs[attr].value })
         urlDependencyIndexes.push(
           attrs[attr].offset.value.end + 1
         )
