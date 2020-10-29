@@ -1,0 +1,14 @@
+{
+  "name": "@useparcel/tape-html-plugin",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@useparcel/tape-utils": "*"
+  } 
+}

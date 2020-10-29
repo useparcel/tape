@@ -1,0 +1,16 @@
+{
+  "name": "@useparcel/tape-utils",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "cheerio": "^0.22.0",
+    "lodash": "^4.17.20",
+    "@useparcel/tape-html-plugin": "*"
+  }  
+}
