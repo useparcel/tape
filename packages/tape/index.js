@@ -7,8 +7,8 @@
  *   - [x] optimize
  *   - [x] output
  *   - [x] resolve
- * - [ ] dev mode
- *   - [ ] onChange
+ * - [x] dev mode
+ *   - [x] onChange
  * - [ ] cleanup
  * 
  * - [x] html plugin
@@ -111,7 +111,9 @@ class Tape {
   }
 
   async build() {
-    const results = await this.#compile({ env: 'production' })
+    const context = { env: 'production' }
+    const results = await this.#compile(context)
+    await this.#cleanup(context)
 
     return pick(results, ['entry', 'files'])
   }
@@ -197,7 +199,6 @@ class Tape {
           emitter.off(event, func)
         })
 
-        // TODO: run cleanup
         cleanup({ env: 'development' })
       },
       on(event, func) {
