@@ -1,4 +1,4 @@
-const Tape = require('@useparcel/tape')
+const Tape = require('./packages/tape')
 
 const tape = new Tape({
   plugins: [

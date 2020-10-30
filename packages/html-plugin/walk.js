@@ -1,7 +1,9 @@
 const cheerio = require('cheerio')
-const { isFunction, memoize, isEmpty, mapValues} = require('lodash')
+const isFunction = require('lodash.isfunction')
+const memoize = require('lodash.memoize')
+const mapValues = require('lodash.mapvalues')
 const load = memoize((html) => cheerio.load(html, { withStartIndices: true, withEndIndices: true }))
-
+const isEmpty = (obj) => Object.keys(obj).length === 0
 
 module.exports = function walk(html, query = '*', walk = () => {}) {
   if (isFunction(query)) {

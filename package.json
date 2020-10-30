@@ -1,7 +1,7 @@
 {
   "name": "tape",
-  "version": "1.0.0",
-  "workspaces": [
-    "packages/*"
-  ]
+  "version": "0.0.1",
+  "devDependencies": {
+    "lerna": "^3.22.1"
+  }
 }

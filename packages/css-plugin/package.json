@@ -9,6 +9,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "is-absolute-url": "^3.0.3"
+    "is-absolute-url": "^3.0.3",
+    "magic-string": "^0.25.7"
   }
 }

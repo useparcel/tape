@@ -9,7 +9,7 @@
  *   - [x] resolve
  * - [x] dev mode
  *   - [x] onChange
- * - [ ] cleanup
+ * - [x] cleanup
  * 
  * - [x] html plugin
  * - [x] css plugin
