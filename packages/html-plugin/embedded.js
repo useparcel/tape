@@ -1,4 +1,4 @@
-const walk = require('@useparcel/tape-utils/walk-html')
+const walk = require('./walk')
 module.exports = ({ asset, addDependency, content }) => {
   let index = 0
   let parts = []

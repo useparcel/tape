@@ -9,7 +9,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@useparcel/tape-utils": "*",
+    "cheerio": "^0.22.0",
     "is-absolute-url": "^3.0.3"
   }
 }

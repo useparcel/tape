@@ -1,5 +1,5 @@
 const MagicString = require('magic-string')
-const walk = require('@useparcel/tape-utils/walk-html')
+const walk = require('./walk')
 const addExternalDependencies = require('./external.js')
 const addEmbeddedDependencies = require('./embedded.js')
 
@@ -19,7 +19,7 @@ const HTMLPlugin = {
       ...parts
     ]
   },
-  async package({ asset, resolveDependency, getAssetContent }) {
+  async package({ asset, resolveAsset, getAssetContent }) {
     const content = new MagicString(asset.content)
     
     walk(asset.content, ({ tag, attrs, content: c }) => {
@@ -29,7 +29,7 @@ const HTMLPlugin = {
 
       for (let { value, offset } of Object.values(attrs)) {
         if (value.endsWith('|tape-dependency')) {
-          content.overwrite(offset.value.start, offset.value.end+1, resolveDependency({ path: value.replace(/\|tape-dependency$/, '') }))
+          content.overwrite(offset.value.start, offset.value.end+1, resolveAsset({ path: value.replace(/\|tape-dependency$/, '') }))
         }
       }
 

@@ -1,4 +1,4 @@
-const walk = require('@useparcel/tape-utils/walk-html')
+const walk = require('./walk')
 const isAbsoluteUrl = require('is-absolute-url')
 
 //https://github.com/parcel-bundler/parcel/blob/v2/packages/transformers/html/src/dependencies.js#L7

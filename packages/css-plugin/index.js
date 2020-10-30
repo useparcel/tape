@@ -15,17 +15,17 @@ const CSSPlugin = {
 
     return {
       ...asset,
-      content: `/* modified */${asset.content}`
+      // content: `/* modified */${asset.content}`
     }
   },
-  async package({ asset, resolveDependency }) {
+  async package({ asset, resolveAsset }) {
     const content = new MagicString(asset.content);
     while (match = IMPORT_REGEX.exec(asset.content)) {
       const path = match[1]
       if (!isAbsoluteUrl(path)) {
         const startIndex = match.index + match[0].indexOf(path)
         const endIndex = startIndex + path.length
-        content.overwrite(startIndex, endIndex, resolveDependency({ path }))
+        content.overwrite(startIndex, endIndex, resolveAsset({ path }))
       }
     }
 
