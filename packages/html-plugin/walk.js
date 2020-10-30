@@ -1,100 +1,106 @@
-const cheerio = require('cheerio')
-const isFunction = require('lodash.isfunction')
-const memoize = require('lodash.memoize')
-const mapValues = require('lodash.mapvalues')
-const load = memoize((html) => cheerio.load(html, { withStartIndices: true, withEndIndices: true }))
-const isEmpty = (obj) => Object.keys(obj).length === 0
+const cheerio = require("cheerio");
+const isFunction = require("lodash.isfunction");
+const memoize = require("lodash.memoize");
+const mapValues = require("lodash.mapvalues");
+const load = memoize((html) =>
+  cheerio.load(html, { withStartIndices: true, withEndIndices: true })
+);
+const isEmpty = (obj) => Object.keys(obj).length === 0;
 
-module.exports = function walk(html, query = '*', walk = () => {}) {
+export default function walk(html, query = "*", walk = () => {}) {
   if (isFunction(query)) {
-    walk = query
-    query = '*'
+    walk = query;
+    query = "*";
   }
 
-  const $ = load(html)
+  const $ = load(html);
 
-  return $(query).toArray().forEach((node) => {
-    const { startIndex, endIndex } = node
-    const raw = html.substring(startIndex, endIndex+1)
-    const content = $(node).text()
-    return walk({
-      tag: node.name,
-      attrs: isEmpty(node.attribs) ? undefined : mapValues(node.attribs, (value, key) => {
-        return {
-          value,
-          offset: getAttributeOffsets(raw, key, value, startIndex)
-        }
-      }),
-      startIndex,
-      endIndex,
-      raw,
-      content: {
-        offset: {
-          start: startIndex + raw.indexOf(content),
-          end: startIndex + raw.indexOf(content) + content.length - 1,
+  return $(query)
+    .toArray()
+    .forEach((node) => {
+      const { startIndex, endIndex } = node;
+      const raw = html.substring(startIndex, endIndex + 1);
+      const content = $(node).text();
+      return walk({
+        tag: node.name,
+        attrs: isEmpty(node.attribs)
+          ? undefined
+          : mapValues(node.attribs, (value, key) => {
+              return {
+                value,
+                offset: getAttributeOffsets(raw, key, value, startIndex),
+              };
+            }),
+        startIndex,
+        endIndex,
+        raw,
+        content: {
+          offset: {
+            start: startIndex + raw.indexOf(content),
+            end: startIndex + raw.indexOf(content) + content.length - 1,
+          },
+          value: content,
         },
-        value: content
-      }
-    })
-  })
+      });
+    });
 }
 
-
-
 function getAttributeOffsets(raw, key, value, baseIndex = 0) {
-  let lookingFor = 'key'
+  let lookingFor = "key";
   let i = 0;
   const offset = {
     start: null,
     stop: null,
     key: {
       start: null,
-      end: null
+      end: null,
     },
     value: {
       start: null,
-      end: null
-    }
-  }
+      end: null,
+    },
+  };
 
-  while(i < raw.length) {
+  while (i < raw.length) {
     // skip whitespace
     if (/\s/.test(raw.charAt(i))) {
       i++;
       continue;
     }
-    
+
     // find key
-    if (lookingFor === 'key' && raw.substr(i, key.length) === key) {
-      offset.start = baseIndex + i
-      offset.key.start = baseIndex + i
-      offset.key.end = baseIndex + i + key.length - 1
-      lookingFor = 'equal'
-      i = i + key.length
+    if (lookingFor === "key" && raw.substr(i, key.length) === key) {
+      offset.start = baseIndex + i;
+      offset.key.start = baseIndex + i;
+      offset.key.end = baseIndex + i + key.length - 1;
+      lookingFor = "equal";
+      i = i + key.length;
       continue;
     }
 
     // find equal
-    if (lookingFor === 'equal') {
-      if (raw.charAt(i) === '=') {
-        lookingFor = 'value'
+    if (lookingFor === "equal") {
+      if (raw.charAt(i) === "=") {
+        lookingFor = "value";
         i++;
         continue;
       }
 
-      throw new Error(`Expected "=", found ${raw.charAt(i)}`)
+      throw new Error(`Expected "=", found ${raw.charAt(i)}`);
     }
-    
+
     // find value
-    if (lookingFor === 'value' && raw.substr(i, value.length).toLowerCase() === value.toLowerCase()) {
-      offset.value.start = baseIndex + i
-      offset.value.end = baseIndex + i + value.length - 1
+    if (
+      lookingFor === "value" &&
+      raw.substr(i, value.length).toLowerCase() === value.toLowerCase()
+    ) {
+      offset.value.start = baseIndex + i;
+      offset.value.end = baseIndex + i + value.length - 1;
 
       if ([`"`, `'`].includes(raw.charAt(i + value.length))) {
-        offset.end = baseIndex + i + value.length
-      }
-      else {
-        offset.end = baseIndex + i + value.length - 1
+        offset.end = baseIndex + i + value.length;
+      } else {
+        offset.end = baseIndex + i + value.length - 1;
       }
 
       break;
@@ -103,5 +109,5 @@ function getAttributeOffsets(raw, key, value, baseIndex = 0) {
     i++;
   }
 
-  return offset
+  return offset;
 }

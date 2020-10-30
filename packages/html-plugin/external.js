@@ -1,28 +1,28 @@
-const walk = require('./walk')
-const isAbsoluteUrl = require('is-absolute-url')
+const walk = require("./walk");
+const isAbsoluteUrl = require("is-absolute-url");
 
 //https://github.com/parcel-bundler/parcel/blob/v2/packages/transformers/html/src/dependencies.js#L7
 // A list of all attributes that may produce a dependency
 // Based on https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes
 const ATTRS = {
   src: [
-    'script',
-    'img',
-    'audio',
-    'video',
-    'source',
-    'track',
-    'iframe',
-    'embed',
-    'amp-img',
+    "script",
+    "img",
+    "audio",
+    "video",
+    "source",
+    "track",
+    "iframe",
+    "embed",
+    "amp-img",
   ],
   // Using href with <script> is described here: https://developer.mozilla.org/en-US/docs/Web/SVG/Element/script
-  href: ['link', 'a', 'use', 'script'],
-  srcset: ['img', 'source'],
-  poster: ['video'],
-  'xlink:href': ['use', 'image', 'script'],
-  content: ['meta'],
-  data: ['object'],
+  href: ["link", "a", "use", "script"],
+  srcset: ["img", "source"],
+  poster: ["video"],
+  "xlink:href": ["use", "image", "script"],
+  content: ["meta"],
+  data: ["object"],
 };
 
 // A list of metadata that should produce a dependency
@@ -34,51 +34,51 @@ const ATTRS = {
 // - https://vk.com/dev/publications
 const META = {
   property: [
-    'og:image',
-    'og:image:url',
-    'og:image:secure_url',
-    'og:audio',
-    'og:audio:secure_url',
-    'og:video',
-    'og:video:secure_url',
-    'vk:image',
+    "og:image",
+    "og:image:url",
+    "og:image:secure_url",
+    "og:audio",
+    "og:audio:secure_url",
+    "og:video",
+    "og:video:secure_url",
+    "vk:image",
   ],
   name: [
-    'twitter:image',
-    'msapplication-square150x150logo',
-    'msapplication-square310x310logo',
-    'msapplication-square70x70logo',
-    'msapplication-wide310x150logo',
-    'msapplication-TileImage',
-    'msapplication-config',
+    "twitter:image",
+    "msapplication-square150x150logo",
+    "msapplication-square310x310logo",
+    "msapplication-square70x70logo",
+    "msapplication-wide310x150logo",
+    "msapplication-TileImage",
+    "msapplication-config",
   ],
   itemprop: [
-    'image',
-    'logo',
-    'screenshot',
-    'thumbnailUrl',
-    'contentUrl',
-    'downloadUrl',
+    "image",
+    "logo",
+    "screenshot",
+    "thumbnailUrl",
+    "contentUrl",
+    "downloadUrl",
   ],
 };
 
-module.exports = ({ asset, addDependency, content }) => {
-  let urlDependencyIndexes = []
+export default ({ asset, addDependency, content }) => {
+  let urlDependencyIndexes = [];
   walk(asset.content, (node) => {
-    const { tag, attrs } = node
+    const { tag, attrs } = node;
     if (!attrs) {
       return false;
     }
 
-    if (tag === 'meta') {
+    if (tag === "meta") {
       if (
-        !Object.keys(attrs).some(attr => {
+        !Object.keys(attrs).some((attr) => {
           let values = META[attr];
           return (
             values &&
             values.includes(attrs[attr]) &&
-            attrs.content !== '' &&
-            !(attrs.name === 'msapplication-config' && attrs.content === 'none')
+            attrs.content !== "" &&
+            !(attrs.name === "msapplication-config" && attrs.content === "none")
           );
         })
       ) {
@@ -88,12 +88,12 @@ module.exports = ({ asset, addDependency, content }) => {
 
     for (let attr in attrs) {
       // Check for virtual paths
-      if (tag === 'a' && attrs[attr].value.lastIndexOf('.') < 1) {
+      if (tag === "a" && attrs[attr].value.lastIndexOf(".") < 1) {
         continue;
       }
 
       // Check for id references
-      if (attrs[attr].value[0] === '#') {
+      if (attrs[attr].value[0] === "#") {
         continue;
       }
 
@@ -103,20 +103,17 @@ module.exports = ({ asset, addDependency, content }) => {
 
       let elements = ATTRS[attr];
       if (elements && elements.includes(node.tag)) {
-        addDependency({ path: attrs[attr].value })
-        urlDependencyIndexes.push(
-          attrs[attr].offset.value.end + 1
-        )
+        addDependency({ path: attrs[attr].value });
+        urlDependencyIndexes.push(attrs[attr].offset.value.end + 1);
         // urlDependencyIndexes.push(node.startIndex + node.raw.toLowerCase().indexOf(attrs[attr].toLowerCase())) + attrs[attr].length
         return false;
       }
     }
 
     return false;
-  })
-
+  });
 
   urlDependencyIndexes.forEach((index) => {
-    content.appendRight(index, '|tape-dependency')
-  })
-}
+    content.appendRight(index, "|tape-dependency");
+  });
+};

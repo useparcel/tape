@@ -2,10 +2,7 @@
   "name": "@useparcel/tape-css-inline-plugin",
   "version": "0.0.1",
   "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "jest"
-  },
+  "main": "bundle.js",
   "author": "",
   "license": "MIT",
   "dependencies": {

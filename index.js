@@ -1,12 +1,12 @@
-const Tape = require('./packages/tape')
+const Tape = require("./packages/tape");
 
 const tape = new Tape({
   plugins: [
     // require('@useparcel/tape-css-inline-plugin')
   ],
-  entry: '/emails/index.html',
+  entry: "/emails/index.html",
   files: {
-    '/emails/index.html': {
+    "/emails/index.html": {
       content: `<!DOCTYPE html>
        <html lang="en">
        <head>
@@ -25,42 +25,42 @@ const tape = new Tape({
        <body>
          
        </body>
-       </html>`
+       </html>`,
     },
-    '/main.css': {
+    "/main.css": {
       content: `
         @import './reset.css'
         a {color: red;}
-      `
+      `,
     },
-    '/reset.css': {
+    "/reset.css": {
       content: `
         body: { margin: 0; }
-      `
+      `,
     },
-    '/another.css': {
+    "/another.css": {
       content: `
         body: { margin: 0; }
-      `
+      `,
     },
-  }
-})
+  },
+});
 
-;(async function() {
+(async function () {
   block: {
-    const manager = tape.dev()
-    manager.on('start', () => {
-      console.log('start bundle')
-    })
-    manager.on('end', ({ entry, isLatest, files }) => {
-      console.log('end bundle', files[entry])
-    })
+    const manager = tape.dev();
+    manager.on("start", () => {
+      console.log("start bundle");
+    });
+    manager.on("end", ({ entry, isLatest, files }) => {
+      console.log("end bundle", files[entry]);
+    });
 
     // console.log((await tape.build()).entry)
     setTimeout(async () => {
       tape.update({
         files: {
-          '/emails/index.html': {
+          "/emails/index.html": {
             content: `<!DOCTYPE html>
        <html lang="en">
        <head>
@@ -79,14 +79,14 @@ const tape = new Tape({
        <body>
          
        </body>
-       </html>`
-          }
-        }
-      })
+       </html>`,
+          },
+        },
+      });
 
       // manager.close()
 
-    //   console.log((await tape.build()).entry)
-    }, 200)
+      //   console.log((await tape.build()).entry)
+    }, 200);
   }
 })();

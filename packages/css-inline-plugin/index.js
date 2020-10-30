@@ -1,15 +1,14 @@
-const juice = require('juice');
+const juice = require("juice");
 const CSSInlinePlugin = {
-  name: 'CSSInlinePlugin',
+  name: "CSSInlinePlugin",
   async optimize({ asset }) {
-    if (asset.ext !== '.html')
-      return asset
-    
+    if (asset.ext !== ".html") return asset;
+
     return {
       ...asset,
-      content: juice(asset.content)
+      content: juice(asset.content),
     };
-  }
-}
+  },
+};
 
-module.exports = CSSInlinePlugin
+export default CSSInlinePlugin;
