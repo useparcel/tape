@@ -1,30 +1,3 @@
-/**
- * - [ ] validate
- * - [x] transform assets
- *   - [x] return assets
- *   - [x] load url dependencies
- * - [x] package
- *   - [x] optimize
- *   - [x] output
- *   - [x] resolve
- * - [x] dev mode
- *   - [x] onChange
- * - [x] cleanup
- *
- * - [x] html plugin
- * - [x] css plugin
- * - [x] css inline
- * - [ ] minify
- * - [ ] sass
- * - [ ] email comb
- *
- * - [ ] lerna
- * - [ ] prettier
- * - [ ] eslint
- * - [ ] rollup for packages
- * - [ ] jest
- * - [ ] publish 0.0.1
- */
 const {
   has,
   defaults,
@@ -55,7 +28,15 @@ class Tape {
   #cache = new Map();
   #emitter = mitt();
 
-  constructor({ plugins, entry, files } = {}) {
+  constructor({ plugins = [], entry, files } = {}) {
+    if (!entry) {
+      throw new Error("`entry` is required");
+    }
+
+    if (!files) {
+      throw new Error("`files` is required");
+    }
+
     this.plugins = [
       HTMLPlugin,
       CSSPlugin,
