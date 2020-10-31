@@ -1,3 +1,6 @@
+import nodePolyfills from "rollup-plugin-node-polyfills";
+import commonjs from "@rollup/plugin-commonjs";
+import json from "@rollup/plugin-json";
 import resolve from "@rollup/plugin-node-resolve";
 import babel from "@rollup/plugin-babel";
 import sourcemaps from "rollup-plugin-sourcemaps";
@@ -9,12 +12,16 @@ const bundle = (name, dir) => ({
     sourcemap: true,
     file: `${dir}/bundle.js`,
     format: "umd",
+    exports: "default",
     name,
   },
   plugins: [
+    nodePolyfills(),
+    json(),
+    babel({ babelHelpers: "bundled" }),
+    commonjs(),
     sourcemaps(),
     resolve(),
-    babel({ babelHelpers: "bundled" }),
     terser(),
   ],
 });

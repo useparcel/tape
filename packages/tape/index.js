@@ -21,7 +21,6 @@ import { DepGraph as Graph } from "dependency-graph";
 import { extname, dirname, resolve as resolvePath } from "path";
 import md5 from "md5";
 import mitt from "mitt";
-import isValidPath from "is-valid-path";
 import HTMLPlugin from "@useparcel/tape-html-plugin";
 import CSSPlugin from "@useparcel/tape-css-plugin";
 import WritePlugin from "./default-write-plugin";
@@ -29,6 +28,7 @@ import WritePlugin from "./default-write-plugin";
 class Tape {
   #cache = new Map();
   #emitter = mitt();
+  #idToPathMap = {};
 
   constructor({ plugins = [], entry, files } = {}) {
     if (!entry) {
@@ -72,23 +72,28 @@ class Tape {
       ...(plugins.find(({ write }) => !!write) ? [] : [WritePlugin]),
     ];
     this.entry = entry;
-    this.files = mapKeys(mapValues(cloneDeep(files), fileDefaults), "id");
+    this.files = mapKeys(
+      mapValues(cloneDeep(files), this.#fileDefaults.bind(this)),
+      "id"
+    );
   }
 
   update({ entry, files = {} } = {}) {
-    if (entry) {
+    let updatedIds = [];
+
+    if (entry && entry !== this.entry) {
       validatePath(entry);
       this.entry = entry;
+      updatedIds.push(this.#pathToId(entry));
     }
 
-    let updatedIds = [];
     for (const [path, file] of Object.entries(files)) {
       validatePath(path);
       validateGivenFile(file);
-      const id = pathToId(path);
+      const id = this.#pathToId(path);
       // new file
       if (!has(this.files, id)) {
-        this.files[id] = fileDefaults(file, path);
+        this.files[id] = this.#fileDefaults(file, path);
         updatedIds.push(id);
       }
       // delete file
@@ -110,7 +115,7 @@ class Tape {
     /**
      * no updates, so skip the event
      */
-    if (!updatedIds) {
+    if (updatedIds.length === 0) {
       return;
     }
 
@@ -132,9 +137,19 @@ class Tape {
     const cleanup = this.#cleanup.bind(this);
     const onChangeAsset = this.#onChangeAsset.bind(this);
 
-    async function onUpdate(updatedIds) {
+    /**
+     * Triggers a compliation using cache
+     * @param  {Array}  updatedIds    an array of inputed files changes
+     * @param  {String} events.start  event to emit at the start
+     * @param  {String} events.end    event to emit at the end
+     */
+    async function triggerCompile(
+      updatedIds,
+      { start = "start", end = "end" } = {}
+    ) {
+      updatedIds = [...updatedIds];
       const startedAt = Date.now();
-      emitter.emit("start", { startedAt });
+      emitter.emit(start, { startedAt });
 
       const context = cache.get("context");
 
@@ -169,26 +184,37 @@ class Tape {
         }
       }
 
-      const results = await compile({ env: "development", context });
+      try {
+        const results = await compile({ env: "development", context });
+        /** only save newer caches */
+        const isLatest =
+          !cache.has("context") || startedAt > cache.get("context").timestamp;
+        if (isLatest) {
+          cache.set("context", {
+            timestamp: startedAt,
+            ...results.context,
+          });
+        }
 
-      /** only save newer caches */
-      const isLatest =
-        !cache.has("context") || startedAt > cache.get("context").timestamp;
-      if (isLatest) {
-        cache.set("context", {
-          timestamp: startedAt,
-          ...results.context,
+        const endedAt = Date.now();
+        emitter.emit(end, {
+          ...pick(results, ["entry", "files"]),
+          startedAt,
+          endedAt,
+          isLatest,
+        });
+      } catch (error) {
+        const endedAt = Date.now();
+        emitter.emit("error", {
+          startedAt,
+          endedAt,
+          // TODO: isLatest
+          error,
         });
       }
-
-      const endedAt = Date.now();
-      emitter.emit("end", {
-        ...pick(results, ["entry", "files"]),
-        startedAt,
-        endedAt,
-        isLatest,
-      });
     }
+
+    const onUpdate = (updatedIds) => triggerCompile(updatedIds);
 
     emitter.on("update", onUpdate);
 
@@ -198,18 +224,18 @@ class Tape {
      * this gives the event handlers a chance to be attached
      */
     setTimeout(() => {
-      emitter.emit("update", []);
+      triggerCompile([], { start: "init", end: "ready" });
     });
 
     return {
       _listeners: [],
-      close() {
+      async close() {
         emitter.off("update", onUpdate);
         this._listeners.forEach(({ event, func }) => {
           emitter.off(event, func);
         });
 
-        cleanup({ env: "development" });
+        await cleanup({ env: "development" });
       },
       on(event, func) {
         this._listeners.push({ event, func });
@@ -239,6 +265,7 @@ class Tape {
    *                                  used to skip compiling unchanged files
    */
   async #compile({ env, context = {} }) {
+    const pathToId = this.#pathToId.bind(this);
     if (!env || !["development", "production"].includes(env)) {
       throw new Error(
         `Expected env to be \`development\` or \`production\`. Received "${env}".`
@@ -315,7 +342,9 @@ class Tape {
        * require the asset exists
        */
       if (!asset) {
-        throw new Error(`Transforming: Asset ${id} not found.`);
+        throw new Error(
+          `Transforming: Asset \`${this.#idToPath(id)}\` not found.`
+        );
       }
 
       /**
@@ -429,7 +458,12 @@ class Tape {
           ...props,
         })
       );
-      generatedAssets.push(...embeddedAssets);
+      generatedAssets.push(
+        ...embeddedAssets.map((asset) => ({
+          ...asset,
+          dir: transformedAsset.dir,
+        }))
+      );
 
       /**
        * update the asset we are transforming
@@ -530,6 +564,38 @@ class Tape {
       ...props,
     });
   }
+
+  /**
+   * Converts a file path into a consistent id
+   */
+  #pathToId(path, dir = "/") {
+    const absolutePath = resolvePath(dir, path);
+
+    const id = md5(absolutePath);
+    this.#idToPathMap[id] = absolutePath;
+    return id;
+  }
+
+  /**
+   * Converts a path to an id
+   */
+  #idToPath(id) {
+    return get(this.#idToPathMap, id, id);
+  }
+
+  /**
+   * Sets the default values for a given file and path
+   */
+  #fileDefaults(file, path) {
+    return {
+      ...file,
+      path,
+      ext: extname(path),
+      originalExt: extname(path),
+      dir: dirname(path),
+      id: this.#pathToId(path),
+    };
+  }
 }
 
 export default Tape;
@@ -556,9 +622,13 @@ function isFalsy(value) {
  * Validates a string is a valid path or throws an error
  */
 function validatePath(path) {
-  if (!isValidPath(path)) {
+  path = path.startsWith("/") ? path.slice(1) : path;
+
+  if (/[<>:"/\\|?*]/.test(path)) {
     throw new Error(`"${path}" is an invalid file path.`);
   }
+
+  return true;
 }
 
 /**
@@ -576,27 +646,6 @@ function validateGivenFile(file) {
   }
 
   throw new Error(`Given an invalid file: ${JSON.stringify(file)}`);
-}
-
-/**
- * Converts a file path into a consistent id
- */
-function pathToId(path, dir = "") {
-  return md5(resolvePath(dir, path));
-}
-
-/**
- * Sets the default values for a given file and path
- */
-function fileDefaults(file, path) {
-  return {
-    ...file,
-    path,
-    ext: extname(path),
-    originalExt: extname(path),
-    dir: dirname(path),
-    id: pathToId(path),
-  };
 }
 
 /**
