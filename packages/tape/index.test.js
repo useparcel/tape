@@ -32,7 +32,7 @@ describe("constructor", () => {
       expect(
         () =>
           new Tape({
-            entry: "invalid-pat!h",
+            entry: "invalid-pat>h",
             files: {
               "/index.html": {
                 content: "test",

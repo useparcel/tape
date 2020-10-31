@@ -24,6 +24,7 @@ import mitt from "mitt";
 import HTMLPlugin from "@useparcel/tape-html-plugin";
 import CSSPlugin from "@useparcel/tape-css-plugin";
 import WritePlugin from "./default-write-plugin";
+import isValidFilename from "valid-filename";
 
 class Tape {
   #cache = new Map();
@@ -604,7 +605,7 @@ export default Tape;
  * Given a value, it forces it to be a compact array
  *
  * 'str' -> ['str']
- * ['a','b', 'c'] -> ['a','b', 'c']
+ * ['a','b', 'c'] -> ['a', 'b', 'c']
  * undefined -> []
  */
 function forceArray(value) {
@@ -622,10 +623,10 @@ function isFalsy(value) {
  * Validates a string is a valid path or throws an error
  */
 function validatePath(path) {
-  path = path.startsWith("/") ? path.slice(1) : path;
-
-  if (/[<>:"/\\|?*]/.test(path)) {
-    throw new Error(`"${path}" is an invalid file path.`);
+  for (let part of compact(path.split("/"))) {
+    if (!isValidFilename(part)) {
+      throw new Error(`"${path}" is an invalid file path.`);
+    }
   }
 
   return true;
