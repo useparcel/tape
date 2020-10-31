@@ -1,4 +1,5 @@
-const walk = require("./walk");
+import walk from "./walk";
+
 export default ({ asset, addDependency, content }) => {
   let index = 0;
   let parts = [];

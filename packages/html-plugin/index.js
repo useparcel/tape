@@ -1,7 +1,7 @@
 import MagicString from "magic-string";
 import walk from "./walk";
-import addExternalDependencies from "./external.js";
-import addEmbeddedDependencies from "./embedded.js";
+import addExternalDependencies from "./external";
+import addEmbeddedDependencies from "./embedded";
 
 const HTMLPlugin = {
   name: "HTMLPlugin",
@@ -42,7 +42,7 @@ const HTMLPlugin = {
           id: attrs["data-tape-id"].value,
         });
         content.remove(
-          attrs["data-tape-id"].offset.start,
+          attrs["data-tape-id"].offset.start - 1, // subtract one to remove the space we added
           attrs["data-tape-id"].offset.end + 1
         );
         content.overwrite(c.offset.start, c.offset.end + 1, styleContent);

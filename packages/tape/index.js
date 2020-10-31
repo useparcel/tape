@@ -1,4 +1,4 @@
-const {
+import {
   has,
   defaults,
   keys,
@@ -15,14 +15,16 @@ const {
   pick,
   uniq,
   isMap,
-} = require("lodash");
-const { DepGraph: Graph } = require("dependency-graph");
-const { extname, dirname, resolve: resolvePath } = require("path");
-const HTMLPlugin = require("@useparcel/tape-html-plugin");
-const CSSPlugin = require("@useparcel/tape-css-plugin");
-const WritePlugin = require("./default-write-plugin");
-const md5 = require("md5");
-const mitt = require("mitt");
+  isPlainObject,
+} from "lodash";
+import { DepGraph as Graph } from "dependency-graph";
+import { extname, dirname, resolve as resolvePath } from "path";
+import md5 from "md5";
+import mitt from "mitt";
+import isValidPath from "is-valid-path";
+import HTMLPlugin from "@useparcel/tape-html-plugin";
+import CSSPlugin from "@useparcel/tape-css-plugin";
+import WritePlugin from "./default-write-plugin";
 
 class Tape {
   #cache = new Map();
@@ -33,8 +35,34 @@ class Tape {
       throw new Error("`entry` is required");
     }
 
+    validatePath(entry);
+
     if (!files) {
       throw new Error("`files` is required");
+    }
+
+    for (const [path, file] of Object.entries(files)) {
+      validatePath(path);
+      validateGivenFile(file);
+    }
+
+    for (const plugin of plugins) {
+      if (!isPlainObject(plugin)) {
+        throw new Error(
+          `Plugins must be plain objects. Given ${typeof plugin}.`
+        );
+      }
+
+      if (!has(plugin, "name")) {
+        throw Error("Plugins must have a name");
+      }
+
+      const count = plugins.filter(({ name }) => plugin.name === name).length;
+      if (count > 1) {
+        throw new Error(
+          `Plugin names must be unique: ${plugin.name} appeared ${count} times`
+        );
+      }
     }
 
     this.plugins = [
@@ -44,16 +72,19 @@ class Tape {
       ...(plugins.find(({ write }) => !!write) ? [] : [WritePlugin]),
     ];
     this.entry = entry;
-    this.files = mapKeys(mapValues(files, fileDefaults), "id");
+    this.files = mapKeys(mapValues(cloneDeep(files), fileDefaults), "id");
   }
 
   update({ entry, files = {} } = {}) {
     if (entry) {
+      validatePath(entry);
       this.entry = entry;
     }
 
     let updatedIds = [];
     for (const [path, file] of Object.entries(files)) {
+      validatePath(path);
+      validateGivenFile(file);
       const id = pathToId(path);
       // new file
       if (!has(this.files, id)) {
@@ -128,8 +159,8 @@ class Tape {
               })
             );
 
-            // clean up context cache
             // TODO: avoid having to retransform dependents - we should only repackage them
+            // clean up context cache
             context.graph.removeNode(id);
             keys(omit(context, "graph")).map((part) => {
               delete context[part][id];
@@ -406,7 +437,6 @@ class Tape {
       transformingAsset = {
         ...transformedAsset,
         ext: get(plugin, "resolve.output", asset.ext),
-        originalExt: transformingAsset.originalExt || transformingAsset.ext,
       };
 
       /**
@@ -523,6 +553,32 @@ function isFalsy(value) {
 }
 
 /**
+ * Validates a string is a valid path or throws an error
+ */
+function validatePath(path) {
+  if (!isValidPath(path)) {
+    throw new Error(`"${path}" is an invalid file path.`);
+  }
+}
+
+/**
+ * Validates an object is a valid file given by the user
+ */
+function validateGivenFile(file) {
+  // falsey values are valid
+  if (isFalsy(file)) {
+    return true;
+  }
+
+  const keys = Object.keys(file);
+  if (keys.length === 1 && keys[0] === "content") {
+    return true;
+  }
+
+  throw new Error(`Given an invalid file: ${JSON.stringify(file)}`);
+}
+
+/**
  * Converts a file path into a consistent id
  */
 function pathToId(path, dir = "") {
@@ -537,6 +593,7 @@ function fileDefaults(file, path) {
     ...file,
     path,
     ext: extname(path),
+    originalExt: extname(path),
     dir: dirname(path),
     id: pathToId(path),
   };
@@ -548,14 +605,12 @@ function fileDefaults(file, path) {
 function cacheNamespace(cache, namespace) {
   const PROXIED_FUNCTIONS = ["get", "set", "has", "delete"];
 
+  // TODO: don't use a proxy
   const proxyHandler = {
     get: function (_, prop) {
       if (PROXIED_FUNCTIONS.includes(prop)) {
         return (key, ...args) => cache[prop](`${namespace}:${key}`, ...args);
       }
-
-      // TODO: proxy for entries, values, keys, forEach, clear, size
-
       throw new Error(`Function \`${props}\` is not supported in cache`);
 
       return cache[prop].bind(cache);

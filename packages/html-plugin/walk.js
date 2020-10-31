@@ -1,7 +1,7 @@
-const cheerio = require("cheerio");
-const isFunction = require("lodash.isfunction");
-const memoize = require("lodash.memoize");
-const mapValues = require("lodash.mapvalues");
+import cheerio from "cheerio";
+import isFunction from "lodash.isfunction";
+import memoize from "lodash.memoize";
+import mapValues from "lodash.mapvalues";
 const load = memoize((html) =>
   cheerio.load(html, { withStartIndices: true, withEndIndices: true })
 );

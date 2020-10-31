@@ -1,11 +1,12 @@
-const MagicString = require("magic-string");
-const isAbsoluteUrl = require("is-absolute-url");
+import MagicString from "magic-string";
+import isAbsoluteUrl from "is-absolute-url";
 const IMPORT_REGEX = /\@import\s*(?:url\()?['"](.*?)['"]\)?/g;
 
 const CSSPlugin = {
   name: "CSSPlugin",
   resolve: { input: [".css"], output: ".css" },
   async transform({ asset, addDependency }) {
+    let match;
     while ((match = IMPORT_REGEX.exec(asset.content))) {
       const path = match[1];
       if (!isAbsoluteUrl(path)) {
@@ -13,13 +14,11 @@ const CSSPlugin = {
       }
     }
 
-    return {
-      ...asset,
-      // content: `/* modified */${asset.content}`
-    };
+    return asset;
   },
   async package({ asset, resolveAsset }) {
     const content = new MagicString(asset.content);
+    let match;
     while ((match = IMPORT_REGEX.exec(asset.content))) {
       const path = match[1];
       if (!isAbsoluteUrl(path)) {

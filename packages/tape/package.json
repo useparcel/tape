@@ -6,13 +6,14 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@useparcel/tape-css-plugin": "0.0.1",
+    "@useparcel/tape-html-plugin": "0.0.1",
     "cheerio": "^0.22.0",
     "dependency-graph": "^0.9.0",
+    "is-valid-path": "^0.1.1",
     "lodash": "^4.17.20",
     "magic-string": "^0.25.7",
     "md5": "^2.3.0",
-    "mitt": "^2.1.0",
-    "@useparcel/tape-html-plugin": "0.0.1",
-    "@useparcel/tape-css-plugin": "0.0.1"
+    "mitt": "^2.1.0"
   }
 }

@@ -1,5 +1,5 @@
-const walk = require("./walk");
-const isAbsoluteUrl = require("is-absolute-url");
+import walk from "./walk";
+import isAbsoluteUrl from "is-absolute-url";
 
 //https://github.com/parcel-bundler/parcel/blob/v2/packages/transformers/html/src/dependencies.js#L7
 // A list of all attributes that may produce a dependency
