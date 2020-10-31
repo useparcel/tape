@@ -30,5 +30,5 @@ export default [
   bundle("tapeCSSInlinePlugin", "packages/css-inline-plugin"),
   bundle("tapeCSSPlugin", "packages/css-plugin"),
   bundle("tapeHTMLPlugin", "packages/html-plugin"),
-  bundle("tape", "packages/tape"),
+  bundle("Tape", "packages/tape"),
 ];

@@ -2,9 +2,10 @@
   "name": "tape",
   "version": "0.0.1",
   "scripts": {
-    "dev": "npx rollup -c rollup.config.js  -w",
-    "build": "npx rollup -c rollup.config.js",
-    "test": "jest"
+    "prepare-cheerio": " browserify packages/html-plugin/cheerio.js -o packages/html-plugin/cheerio-bundle.js -t [ babelify ] -s cheerio",
+    "dev": "npm run prepare-cheerio && npx rollup -c rollup.config.js  -w",
+    "build": "npm run prepare-cheerio && npx rollup -c rollup.config.js",
+    "test": "npm run prepare-cheerio && jest"
   },
   "devDependencies": {
     "@babel/core": "^7.12.3",
@@ -18,6 +19,8 @@
     "@rollup/plugin-node-resolve": "^10.0.0",
     "babel-eslint": "^10.1.0",
     "babel-jest": "^26.6.1",
+    "babelify": "^10.0.0",
+    "browserify": "^17.0.0",
     "eslint": "^7.12.1",
     "eslint-config-prettier": "^6.15.0",
     "husky": "^4.3.0",
