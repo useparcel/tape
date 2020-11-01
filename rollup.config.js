@@ -1,3 +1,4 @@
+import alias from "@rollup/plugin-alias";
 import nodePolyfills from "rollup-plugin-node-polyfills";
 import commonjs from "@rollup/plugin-commonjs";
 import json from "@rollup/plugin-json";
@@ -14,14 +15,25 @@ const bundle = (name, dir) => ({
     format: "umd",
     exports: "default",
     name,
+    intro: "var global = typeof self !== undefined ? self : this;",
   },
   plugins: [
+    alias({
+      entries: [
+        { find: "sass", replacement: "sass.js" },
+        {
+          find: "cheerio",
+          replacement: `${__dirname}/packages/html-plugin/cheerio-bundle.js`,
+        },
+        { find: "node-fetch", replacement: "isomorphic-fetch" },
+      ],
+    }),
     nodePolyfills(),
     json(),
     babel({ babelHelpers: "bundled" }),
-    commonjs(),
     sourcemaps(),
     resolve(),
+    commonjs(),
     terser(),
   ],
   watch: {
@@ -33,6 +45,6 @@ export default [
   bundle("tapeCSSInlinePlugin", "packages/css-inline-plugin"),
   bundle("tapeCSSPlugin", "packages/css-plugin"),
   bundle("tapeHTMLPlugin", "packages/html-plugin"),
-  bundle("tapeSassPlugin", "packages/sass-plugin"),
+  // bundle("tapeSassPlugin", "packages/sass-plugin"),
   bundle("Tape", "packages/tape"),
 ];

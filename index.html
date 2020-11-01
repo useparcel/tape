@@ -22,12 +22,12 @@
       flex-grow: 1;
     }
 
-    .editor:before {
+    .editor:after {
       content: attr(data-file);
       display: block;
       position: absolute;
-      top: 0;
-      right: 0;
+      top: 2px;
+      right: 2px;
       background: white;
       padding: 5px;
     }
@@ -54,22 +54,15 @@
 </head>
 <body>
   <div class="half">
-    <div class="editor" data-file="/index.mjml">
-      <textarea><mjml>
-  <mj-body>
-    <mj-section>
-      <mj-column>
-
-        <mj-image width="100px" src="/assets/img/logo-small.png"></mj-image>
-
-        <mj-divider border-color="#F45E43"></mj-divider>
-
-        <mj-text font-size="20px" color="#F45E43" font-family="helvetica">Hello World</mj-text>
-
-      </mj-column>
-    </mj-section>
-  </mj-body>
-</mjml></textarea>
+    <div class="editor" data-file="/index.html">
+      <textarea><html>
+<head>
+<link rel="stylesheet" href="style.scss">
+</head>
+<body>
+  cool
+</body>
+</html></textarea>
     </div>
     <div class="editor" data-file="/style.scss">
       <textarea>body {background: lightblue;}</textarea>
@@ -80,7 +73,7 @@
   </div>
   <script src="./packages/tape/bundle.js"></script>
   <script src="./packages/sass-plugin/bundle.js"></script>
-  <script src="./packages/mjml-plugin/bundle.js"></script>
+  <script src="./packages/css-inline-plugin/bundle.js"></script>
   <script>
     const mimeType = {
       '.css': 'text/css',
@@ -125,7 +118,8 @@
       entry: "/index.html",
       plugins: [
         tapeSassPlugin,
-        urlWrite
+        // tapeCSSInlinePlugin,
+        urlWrite,
       ],
       files: baseFiles,
     });
@@ -145,9 +139,15 @@
         iframe.contentWindow.document.write(`
           <html>
           <body style="margin: 0; font-family: system-ui; color: #730f45;box-sizing: border-box;background: #fce4ec; padding: 20px; height: 100vh;width: 100vw; display: flex; justify-content: space-between; align-items: center;">
-            <div><h1 style=" font-size: 20px;">Error: ${data.error.message}</h1>
-            <pre style="width: 100%; white-space: break-spaces;">${data.error.stack}</pre></div>
-
+            <div>
+              <h1 style=" font-size: 20px;">Error: ${data.error.message}</h1>
+              <pre style="width: 100%; white-space: break-spaces;">${data.error.stack}</pre>
+              ${data.error.hasOwnProperty('path') ? `
+                <code>File: ${data.error.path}</code><br/>
+                <code>Line: ${data.error.line}</code><br/>
+                <code>Column: ${data.error.column}</code><br/>
+              ` : ''}
+            </div>
           </body>
           </html>
         `);
@@ -167,46 +167,6 @@
         })
       })
     })
-    
-
-    // (async function () {
-    //   block: {
-
-
-    //     // console.log((await tape.build()).entry)
-    //     setTimeout(async () => {
-    //       tape.update({
-    //         files: {
-    //           "/emails/index.html": {
-    //             content: `<!DOCTYPE html>
-    //        <html lang="en">
-    //        <head>
-    //          <meta charset="UTF-8">
-    //          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    //          <title>Document</title>
-    //          <link rel="stylesheet" href="https://example.com/reset.css">
-    //          <style>
-    //           @import '/main.css';
-    //           @import '/another.css';
-    //           body {
-    //             padding: 0;
-    //           }
-    //          </style>
-    //        </head>
-    //        <body>
-             
-    //        </body>
-    //        </html>`,
-    //           },
-    //         },
-    //       });
-
-    //       // manager.close()
-
-    //       //   console.log((await tape.build()).entry)
-    //     }, 200);
-    //   }
-    // })();
   </script>
 </body>
 </html>

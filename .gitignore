@@ -1,5 +1,4 @@
 node_modules
 bundle.js*
 coverage
-__snapshots__
 *-bundle.js

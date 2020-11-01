@@ -9,7 +9,7 @@ export default ({ asset, addDependency, content }) => {
     ({ attrs, raw, startIndex, content: { value } }) => {
       let type = "css";
       if (attrs && attrs.type) {
-        type = attrs.type.split("/")[1];
+        type = attrs.type.value.split("/")[1];
       }
 
       const id = `${asset.id}:${index}`;

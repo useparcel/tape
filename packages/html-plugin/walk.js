@@ -1,4 +1,4 @@
-import cheerio from "./cheerio-bundle";
+import cheerio from "cheerio";
 import isFunction from "lodash.isfunction";
 import memoize from "lodash.memoize";
 import mapValues from "lodash.mapvalues";

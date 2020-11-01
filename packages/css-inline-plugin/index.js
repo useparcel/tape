@@ -1,4 +1,5 @@
 import juice from "juice";
+
 const CSSInlinePlugin = {
   name: "CSSInlinePlugin",
   async optimize({ asset }) {

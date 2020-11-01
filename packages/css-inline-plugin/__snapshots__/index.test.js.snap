@@ -1,0 +1,25 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CSSInlinePlugin should inline the css 1`] = `
+Object {
+  "entry": "/index.html",
+  "files": Object {
+    "/index.html": Object {
+      "content": "
+            <html>
+              <head>
+                
+                <link rel=\\"stylesheet\\" href=\\"/style.css\\">
+              </head>
+              <body style=\\"background: blue;\\">
+                body
+              </body>
+            </html>
+          ",
+    },
+    "/style.css": Object {
+      "content": "nothing should happen to me",
+    },
+  },
+}
+`;

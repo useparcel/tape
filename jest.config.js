@@ -5,5 +5,6 @@ module.exports = {
     "packages/**/*.{js,jsx}",
     "!**/node_modules/**",
     "!**/bundle.js",
+    "!**/cheerio-bundle.js",
   ],
 };

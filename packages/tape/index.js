@@ -7,7 +7,6 @@ import {
   mapValues,
   castArray,
   compact,
-  set,
   get,
   isFunction,
   isEmpty,
@@ -332,7 +331,10 @@ class Tape {
      * Transform
      *******************************/
     let assets = cloneDeep(omit(this.files, keys(transformedAssets)));
-    set(assets, [entryId, "isEntry"], true);
+
+    if (has(assets, entryId)) {
+      assets[entryId].isEntry = true;
+    }
 
     let dependencies = [entryId];
     while (dependencies.length > 0) {
@@ -355,7 +357,7 @@ class Tape {
          * created in the future, the dependent will recompile but
          * if we try to package this node, we know to skip it
          */
-        graph.setNodeData(id, { missing: true });
+        if (graph.hasNode(id)) graph.setNodeData(id, { missing: true });
         throw new Error(
           `Transforming: Asset \`${this.#idToPath(id)}\` not found.`
         );
@@ -684,11 +686,14 @@ function validateGivenFile(file) {
  * Creates namespaced access to a cache
  */
 function cacheNamespace(cache, namespace) {
+  const prefix = `${namespace}:`;
   return {
-    get: (key) => cache.get(`${namespace}:${key}`),
-    set: (key, value) => cache.set(`${namespace}:${key}`, value),
-    has: (key) => cache.has(`${namespace}:${key}`),
-    delete: (key) => cache.delete(`${namespace}:${key}`),
+    get: (key) => cache.get(`${prefix}${key}`),
+    set: (key, value) => cache.set(`${prefix}${key}`, value),
+    has: (key) => cache.has(`${prefix}${key}`),
+    delete: (key) => cache.delete(`${prefix}${key}`),
+    entries: () =>
+      [...cache.entries()].filter(([key]) => key.startsWith(prefix)),
   };
 }
 

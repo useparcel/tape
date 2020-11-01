@@ -6,6 +6,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "isomorphic-fetch": "^3.0.0",
     "juice": "^7.0.0"
   }
 }

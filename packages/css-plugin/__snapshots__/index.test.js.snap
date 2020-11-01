@@ -1,0 +1,69 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CSSPlugin should for work for this complex example of all the things 1`] = `
+Object {
+  "entry": "different-base/index.html",
+  "files": Object {
+    "different-base/found-image.gif": Object {
+      "content": "ok",
+    },
+    "different-base/index.html": Object {
+      "content": "
+            <html>
+              <head>
+                <style>
+                  body {
+                    background: url('https://useparcel.com/background.png');
+                  }
+
+                  div {
+                    background-image: url('different-base/found-image.gif');
+                  }
+
+                  @import 'different-base/style.css';
+                </style>
+              </head>
+              <body>
+                body
+              </body>
+            </html>
+          ",
+    },
+    "different-base/style.css": Object {
+      "content": "
+            @import 'https://useparcel.com/reset.css';
+          ",
+    },
+  },
+}
+`;
+
+exports[`CSSPlugin should ignore absolute urls 1`] = `
+Object {
+  "entry": "/index.html",
+  "files": Object {
+    "/index.html": Object {
+      "content": "
+            <html>
+              <head>
+                <style>
+                  body {
+                    background: url('https://useparcel.com/background.png');
+                  }
+                </style>
+                <link rel=\\"stylesheet\\" href=\\"/style.css\\">
+              </head>
+              <body>
+                body
+              </body>
+            </html>
+          ",
+    },
+    "/style.css": Object {
+      "content": "
+            @import 'https://useparcel.com/reset.css';
+          ",
+    },
+  },
+}
+`;

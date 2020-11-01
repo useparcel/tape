@@ -1,0 +1,48 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`SassPlugin should convert an external sass file to css 1`] = `
+Object {
+  "entry": "/index.html",
+  "files": Object {
+    "/index.html": Object {
+      "content": "
+            <html>
+              <head>
+                <link rel=\\"stylesheet\\" href=\\"/style.css\\">
+              </head>
+              <body>
+                body
+              </body>
+            </html>
+          ",
+    },
+    "/style.css": Object {
+      "content": "body {
+  background: blue;
+}",
+    },
+  },
+}
+`;
+
+exports[`SassPlugin should convert embedded sass to css 1`] = `
+Object {
+  "entry": "/index.html",
+  "files": Object {
+    "/index.html": Object {
+      "content": "
+            <html>
+              <head>
+                <style type=\\"text/scss\\">body {
+  background: blue;
+}</style>
+              </head>
+              <body>
+                body
+              </body>
+            </html>
+          ",
+    },
+  },
+}
+`;
