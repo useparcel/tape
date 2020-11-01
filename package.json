@@ -2,7 +2,7 @@
   "name": "tape",
   "version": "0.0.1",
   "scripts": {
-    "prepare-cheerio": " browserify packages/html-plugin/cheerio.js -o packages/html-plugin/cheerio-bundle.js -t [ babelify ] -s cheerio",
+    "prepare-cheerio": "browserify packages/html-plugin/cheerio.js -o packages/html-plugin/cheerio-bundle.js -t [ babelify ] -s cheerio",
     "dev": "npm run prepare-cheerio && npx rollup -c rollup.config.js  -w",
     "build": "npm run prepare-cheerio && npx rollup -c rollup.config.js",
     "test": "npm run prepare-cheerio && jest"

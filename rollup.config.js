@@ -24,11 +24,15 @@ const bundle = (name, dir) => ({
     resolve(),
     terser(),
   ],
+  watch: {
+    exclude: "node_modules/**",
+  },
 });
 
 export default [
   bundle("tapeCSSInlinePlugin", "packages/css-inline-plugin"),
   bundle("tapeCSSPlugin", "packages/css-plugin"),
   bundle("tapeHTMLPlugin", "packages/html-plugin"),
+  bundle("tapeSassPlugin", "packages/sass-plugin"),
   bundle("Tape", "packages/tape"),
 ];

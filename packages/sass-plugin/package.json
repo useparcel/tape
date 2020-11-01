@@ -1,0 +1,11 @@
+{
+  "name": "@useparcel/tape-sass-plugin",
+  "version": "0.0.1",
+  "description": "",
+  "main": "bundle.js",
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "sass.js": "^0.11.1"
+  }
+}

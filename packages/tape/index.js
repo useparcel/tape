@@ -7,6 +7,7 @@ import {
   mapValues,
   castArray,
   compact,
+  set,
   get,
   isFunction,
   isEmpty,
@@ -137,6 +138,7 @@ class Tape {
     const compile = this.#compile.bind(this);
     const cleanup = this.#cleanup.bind(this);
     const onChangeAsset = this.#onChangeAsset.bind(this);
+    const idToPath = this.#idToPath.bind(this);
 
     /**
      * Triggers a compliation using cache
@@ -171,7 +173,10 @@ class Tape {
             updatedIds.push(
               ...context.graph.dependantsOf(id),
               ...context.graph.directDependenciesOf(id).filter((id) => {
-                return context.transformedAssets[id].embedded;
+                return (
+                  context.transformedAssets[id] &&
+                  context.transformedAssets[id].embedded
+                );
               })
             );
 
@@ -319,7 +324,7 @@ class Tape {
           getAssetContent: ({ id, path }) =>
             getAssetContent({ id, path, dir: asset.dir }),
         },
-        ["asset", ...context]
+        ["asset", "env", ...context]
       );
     };
 
@@ -327,6 +332,8 @@ class Tape {
      * Transform
      *******************************/
     let assets = cloneDeep(omit(this.files, keys(transformedAssets)));
+    set(assets, [entryId, "isEntry"], true);
+
     let dependencies = [entryId];
     while (dependencies.length > 0) {
       const id = dependencies.shift();
@@ -343,6 +350,12 @@ class Tape {
        * require the asset exists
        */
       if (!asset) {
+        /**
+         * Set the node to missing. This way when the node gets
+         * created in the future, the dependent will recompile but
+         * if we try to package this node, we know to skip it
+         */
+        graph.setNodeData(id, { missing: true });
         throw new Error(
           `Transforming: Asset \`${this.#idToPath(id)}\` not found.`
         );
@@ -381,10 +394,28 @@ class Tape {
     /********************************
      * Package, optimize, and write
      *******************************/
+
     for (let id of graph.overallOrder()) {
+      /**
+       * The asset was referenced but didn't exist. It was blocking
+       * the transform. Now the reference was removed, so we can remove
+       * it from the graph.
+       */
+      if (get(graph.getNodeData(id), "missing")) {
+        graph.removeNode(id);
+        continue;
+      }
+
       const asset = transformedAssets[id];
       if (!asset) {
-        throw new Error(`Packaging: Asset ${id} not found.`);
+        throw new Error(`Packaging: Asset ${this.#idToPath(id)} not found.`);
+      }
+
+      /**
+       * We have the asset already from the given context
+       */
+      if (packagedAssets[id]) {
+        continue;
       }
 
       packagedAssets[id] = await this.#packageAsset(
@@ -479,7 +510,7 @@ class Tape {
        */
       if (transformingAsset.ext !== asset.ext) {
         return [
-          ...(await this.transformAsset({
+          ...(await this.#transformAsset({
             asset: transformingAsset,
             ...props,
           })),
@@ -653,21 +684,12 @@ function validateGivenFile(file) {
  * Creates namespaced access to a cache
  */
 function cacheNamespace(cache, namespace) {
-  const PROXIED_FUNCTIONS = ["get", "set", "has", "delete"];
-
-  // TODO: don't use a proxy
-  const proxyHandler = {
-    get: function (_, prop) {
-      if (PROXIED_FUNCTIONS.includes(prop)) {
-        return (key, ...args) => cache[prop](`${namespace}:${key}`, ...args);
-      }
-      throw new Error(`Function \`${props}\` is not supported in cache`);
-
-      return cache[prop].bind(cache);
-    },
+  return {
+    get: (key) => cache.get(`${namespace}:${key}`),
+    set: (key, value) => cache.set(`${namespace}:${key}`, value),
+    has: (key) => cache.has(`${namespace}:${key}`),
+    delete: (key) => cache.delete(`${namespace}:${key}`),
   };
-
-  return new Proxy({}, proxyHandler);
 }
 
 /**
@@ -692,8 +714,8 @@ function shouldRunPlugin(plugin, method, ext) {
  */
 function newGraph() {
   const graph = new Graph();
-  graph.directDependenciesOf = (name) => graph.outgoingEdges[name];
-  graph.directDependantsOf = (name) => graph.incomingEdges[name];
+  graph.directDependenciesOf = (name) => get(graph.outgoingEdges, name, []);
+  graph.directDependantsOf = (name) => get(graph.incomingEdges, name, []);
 
   return graph;
 }
