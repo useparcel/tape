@@ -50,7 +50,7 @@ class Tape {
     for (const plugin of plugins) {
       if (!isPlainObject(plugin)) {
         throw new Error(
-          `Plugins must be plain objects. Given ${typeof plugin}.`
+          `Invalid plugin. Given ${typeof plugin} (${variablePreview(plugin)}).`
         );
       }
 
@@ -358,9 +358,12 @@ class Tape {
          * if we try to package this node, we know to skip it
          */
         if (graph.hasNode(id)) graph.setNodeData(id, { missing: true });
-        throw new Error(
-          `Transforming: Asset \`${this.#idToPath(id)}\` not found.`
-        );
+
+        const path = this.#idToPath(id);
+        const error = new Error(`Transforming: Asset \`${path}\` not found.`);
+        error.path = path;
+
+        throw error;
       }
 
       /**
@@ -410,7 +413,10 @@ class Tape {
 
       const asset = transformedAssets[id];
       if (!asset) {
-        throw new Error(`Packaging: Asset ${this.#idToPath(id)} not found.`);
+        const path = this.#idToPath(id);
+        const error = new Error(`Packaging: Asset ${path} not found.`);
+        error.path = path;
+        throw error;
       }
 
       /**
@@ -658,7 +664,9 @@ function isFalsy(value) {
 function validatePath(path) {
   for (let part of compact(path.split("/"))) {
     if (!isValidFilename(part)) {
-      throw new Error(`"${path}" is an invalid file path.`);
+      const error = new Error(`"${path}" is an invalid file path.`);
+      error.path = path;
+      throw error;
     }
   }
 
@@ -723,4 +731,16 @@ function newGraph() {
   graph.directDependantsOf = (name) => get(graph.incomingEdges, name, []);
 
   return graph;
+}
+
+/**
+ * Returns a string preview of the given variable
+ */
+function variablePreview(v) {
+  try {
+    const str = JSON.stringify(v, null);
+    return `${str.slice(0, 50)}${str.length > 50 ? "..." : ""}`;
+  } catch (e) {
+    return "Unknown";
+  }
 }

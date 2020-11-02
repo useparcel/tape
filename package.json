@@ -2,11 +2,11 @@
   "name": "tape",
   "version": "0.0.1",
   "scripts": {
-    "clean": "rm **/bundle.js* && rm -rf **/node_modules",
-    "prepare-cheerio": "browserify packages/html-plugin/cheerio.js -o packages/html-plugin/cheerio-bundle.js -t [ babelify ] -s cheerio  --debug",
-    "dev": "npm run prepare-cheerio && npx rollup -c rollup.config.js  -w",
-    "build": "npm run prepare-cheerio && npx rollup -c rollup.config.js",
-    "test": "npm run prepare-cheerio && jest"
+    "clean": "rm **/bundle.js && rm -rf **/node_modules",
+    "bootstrap": "npm install && npx lerna bootstrap",
+    "dev": "npx webpack --mode development --watch",
+    "build": "npx webpack --mode production",
+    "test": "jest"
   },
   "devDependencies": {
     "@babel/core": "^7.12.3",
@@ -14,26 +14,21 @@
     "@babel/plugin-proposal-class-properties": "^7.12.1",
     "@babel/plugin-proposal-private-methods": "^7.12.1",
     "@babel/preset-env": "^7.12.1",
-    "@rollup/plugin-alias": "^3.1.1",
-    "@rollup/plugin-babel": "^5.2.1",
-    "@rollup/plugin-commonjs": "^16.0.0",
-    "@rollup/plugin-json": "^4.1.0",
-    "@rollup/plugin-node-resolve": "^10.0.0",
     "babel-eslint": "^10.1.0",
     "babel-jest": "^26.6.1",
-    "babelify": "^10.0.0",
-    "browserify": "^17.0.0",
+    "babel-loader": "^8.1.0",
     "eslint": "^7.12.1",
     "eslint-config-prettier": "^6.15.0",
     "husky": "^4.3.0",
     "jest": "^26.6.1",
     "lerna": "^3.22.1",
     "lint-staged": "^10.5.0",
+    "path-browserify": "^1.0.1",
     "prettier": "^2.1.2",
-    "rollup": "^2.32.1",
-    "rollup-plugin-node-polyfills": "^0.2.1",
-    "rollup-plugin-sourcemaps": "^0.6.3",
-    "rollup-plugin-terser": "^7.0.2"
+    "stream-browserify": "^3.0.0",
+    "string-replace-loader": "^2.3.0",
+    "webpack": "^5.3.2",
+    "webpack-cli": "^4.1.0"
   },
   "eslintConfig": {
     "parser": "@babel/eslint-parser",
@@ -62,5 +57,12 @@
       "pre-commit": "lint-staged",
       "pre-push": "npm test"
     }
+  },
+  "dependencies": {
+    "buffer": "^5.7.0",
+    "crypto-browserify": "^3.12.0",
+    "process": "^0.11.10",
+    "url": "^0.11.0",
+    "util": "^0.12.3"
   }
 }

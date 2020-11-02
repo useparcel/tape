@@ -70,6 +70,7 @@
   </div>
   <div class="half">
     <iframe></iframe>
+    <div id="error"></div>
   </div>
   <script src="./packages/tape/bundle.js"></script>
   <script src="./packages/sass-plugin/bundle.js"></script>
@@ -108,17 +109,18 @@
     }
 
     const iframe = document.querySelector('iframe')
+    const error = document.querySelector('#error')
     const baseFiles = {};
     [...document.querySelectorAll('.editor')].forEach(editor => {
       baseFiles[editor.getAttribute('data-file')] = {
         content: editor.querySelector('textarea').value
       }
     })
-    const tape = new Tape({
+    const tape = new Tape.default({
       entry: "/index.html",
       plugins: [
-        tapeSassPlugin,
-        // tapeCSSInlinePlugin,
+        tapeSassPlugin.default,
+        tapeCSSInlinePlugin.default,
         urlWrite,
       ],
       files: baseFiles,
@@ -131,15 +133,16 @@
         iframe.contentWindow.document.open();
         iframe.contentWindow.document.write(data.files[data.entry].content);
         iframe.contentWindow.document.close();
+        error.innerHTML = ''
       }
 
       if (event === 'error') {
         console.log(data.error)
-        iframe.contentWindow.document.open();
-        iframe.contentWindow.document.write(`
+        error.innerHTML = `
           <html>
-          <body style="margin: 0; font-family: system-ui; color: #730f45;box-sizing: border-box;background: #fce4ec; padding: 20px; height: 100vh;width: 100vw; display: flex; justify-content: space-between; align-items: center;">
-            <div>
+          <body style="">
+            <div style="margin: 0; font-family: system-ui; color: #730f45;box-sizing: border-box;background: #fce4ec; padding: 20px; height: 250px; width: 100%; display: flex; justify-content: space-between; align-items: center;">
+              <div>
               <h1 style=" font-size: 20px;">Error: ${data.error.message}</h1>
               <pre style="width: 100%; white-space: break-spaces;">${data.error.stack}</pre>
               ${data.error.hasOwnProperty('path') ? `
@@ -147,11 +150,11 @@
                 <code>Line: ${data.error.line}</code><br/>
                 <code>Column: ${data.error.column}</code><br/>
               ` : ''}
+              </div>
             </div>
           </body>
           </html>
-        `);
-        iframe.contentWindow.document.close();
+        `
       }
     });
 
