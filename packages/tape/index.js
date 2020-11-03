@@ -66,12 +66,7 @@ class Tape {
       }
     }
 
-    this.plugins = [
-      HTMLPlugin,
-      CSSPlugin,
-      ...plugins,
-      ...(plugins.find(({ write }) => !!write) ? [] : [WritePlugin]),
-    ];
+    this.plugins = defaultPlugins(plugins);
     this.entry = entry;
     this.files = mapKeys(
       mapValues(cloneDeep(files), this.#fileDefaults.bind(this)),
@@ -79,13 +74,23 @@ class Tape {
     );
   }
 
-  update({ entry, files = {} } = {}) {
+  update({ entry, plugins, files = {} } = {}) {
     let updatedIds = [];
 
     if (entry && entry !== this.entry) {
       validatePath(entry);
       this.entry = entry;
       updatedIds.push(this.#pathToId(entry));
+    }
+
+    if (plugins) {
+      this.plugins = defaultPlugins(plugins);
+
+      const context = this.#cache.get("context");
+      // Mark everything as updated if we change plugins
+      if (context) {
+        updatedIds.push(...context.graph.overallOrder());
+      }
     }
 
     for (const [path, file] of Object.entries(files)) {
@@ -180,7 +185,8 @@ class Tape {
             );
 
             // TODO: avoid having to retransform dependents - we should only repackage them
-            // clean up context cache
+
+            // clean up cache
             context.graph.removeNode(id);
             keys(omit(context, "graph")).map((part) => {
               delete context[part][id];
@@ -743,4 +749,13 @@ function variablePreview(v) {
   } catch (e) {
     return "Unknown";
   }
+}
+
+function defaultPlugins(plugins) {
+  return [
+    HTMLPlugin,
+    CSSPlugin,
+    ...plugins,
+    ...(plugins.find(({ write }) => !!write) ? [] : [WritePlugin]),
+  ];
 }

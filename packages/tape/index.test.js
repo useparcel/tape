@@ -90,7 +90,7 @@ describe("constructor", () => {
             ...validConfig,
             plugins: [null],
           })
-      ).toThrow(/plain object/);
+      ).toThrow(/invalid plugin/i);
     });
 
     test("should make sure all plugin have names", () => {
