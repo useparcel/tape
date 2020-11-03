@@ -1,4 +1,4 @@
-import Sass from "sass.js";
+import Sass from "sass";
 
 /**
  * For some reason Sass.js isn't working in node when testing

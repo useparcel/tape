@@ -1,0 +1,11 @@
+{
+  "name": "@useparcel/tape-html-prettify-plugin",
+  "version": "0.0.1",
+  "description": "",
+  "main": "bundle.js",
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "pretty": "^2.0.0"
+  }
+}

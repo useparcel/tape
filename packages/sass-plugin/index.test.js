@@ -25,18 +25,14 @@ describe("SassPlugin", () => {
 
             body {
               background: $my-color;
-            
+            }
           `,
         },
       },
     });
 
-    try {
-      const results = await tape.build();
-      expect(results).toMatchSnapshot();
-    } catch (e) {
-      console.log(e);
-    }
+    const results = await tape.build();
+    expect(results).toMatchSnapshot();
   });
 
   test("should convert embedded sass to css", async () => {

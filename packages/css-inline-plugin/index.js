@@ -23,26 +23,31 @@ const CSSInlinePlugin = {
   async optimize({ asset }) {
     if (asset.ext !== ".html") return asset;
 
-    return new Promise((resolve, reject) => {
-      juice.juiceResources(
-        asset.content,
-        {
-          webResources: {
-            relativeTo: asset.path,
-          },
-        },
-        (err, content) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve({
-              ...asset,
-              content,
-            });
-          }
-        }
-      );
-    });
+    return {
+      ...asset,
+      content: juice(asset.content),
+    };
+
+    // return new Promise((resolve, reject) => {
+    //   juice.juiceResources(
+    //     asset.content,
+    //     {
+    //       webResources: {
+    //         relativeTo: asset.path,
+    //       },
+    //     },
+    //     (err, content) => {
+    //       if (err) {
+    //         reject(err);
+    //       } else {
+    //         resolve({
+    //           ...asset,
+    //           content,
+    //         });
+    //       }
+    //     }
+    //   );
+    // });
   },
 };
 

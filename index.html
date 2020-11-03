@@ -75,6 +75,8 @@
   <script src="./packages/tape/bundle.js"></script>
   <script src="./packages/sass-plugin/bundle.js"></script>
   <script src="./packages/css-inline-plugin/bundle.js"></script>
+  <script src="./packages/html-minify-plugin/bundle.js"></script>
+  <script src="./packages/html-prettify-plugin/bundle.js"></script>
   <script>
     const mimeType = {
       '.css': 'text/css',
@@ -121,15 +123,25 @@
       plugins: [
         tapeSassPlugin.default,
         tapeCSSInlinePlugin.default,
+        tapeHTMLMinifyPlugin.default(),
+        // tapeHTMLPrettifyPlugin.default(),
         urlWrite,
       ],
       files: baseFiles,
     });
 
+    // setTimeout(() => {
+    //   tape.update({
+    //     plugins: []
+    //   })
+    //   alert('changed plugins')
+    // }, 5000)
+
 
     const manager = tape.dev();
     manager.on('*', (event, data) => {
       if (event === 'ready' || event === 'end') {
+        console.log(data.files[data.entry].content)
         iframe.contentWindow.document.open();
         iframe.contentWindow.document.write(data.files[data.entry].content);
         iframe.contentWindow.document.close();
