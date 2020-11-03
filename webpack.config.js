@@ -3,6 +3,7 @@ const webpack = require("webpack");
 const bundle = (name, dir) => (env, argv) => {
   return {
     entry: `${__dirname}/packages/${dir}/index.js`,
+    devtool: argv.mode === "development" ? "source-map" : false,
     output: {
       path: `${__dirname}/packages/${dir}`,
       filename: "bundle.js",
@@ -17,7 +18,7 @@ const bundle = (name, dir) => (env, argv) => {
       new webpack.ProvidePlugin({ util: ["util"] }),
     ],
     resolve: {
-      // polyfills
+      // node polyfills
       fallback: {
         stream: require.resolve("stream-browserify"),
         crypto: require.resolve("crypto-browserify"),
@@ -27,16 +28,10 @@ const bundle = (name, dir) => (env, argv) => {
       alias: {
         sass: "sass.js",
         "node-fetch": "isomorphic-fetch",
-        // In development, we don't want the bundled version.
+        // We don't want the bundled version
         // https://github.com/webpack/webpack/issues/11277
-        ...(argv.mode === "development"
-          ? {
-              "@useparcel/tape-html-plugin":
-                "@useparcel/tape-html-plugin/index.js",
-              "@useparcel/tape-css-plugin":
-                "@useparcel/tape-css-plugin/index.js",
-            }
-          : {}),
+        "@useparcel/tape-html-plugin": "@useparcel/tape-html-plugin/index.js",
+        "@useparcel/tape-css-plugin": "@useparcel/tape-css-plugin/index.js",
       },
     },
     module: {
