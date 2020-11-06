@@ -31,7 +31,7 @@ const handler = (cb) => (err, result) => {
 };
 
 export default {
-  name: "SassPlugin",
+  name: "@useparcel/tape-sass",
   resolve: { input: [".scss", ".sass"], output: ".css" },
   transform({ asset, report }) {
     return new Promise((resolve, reject) => {

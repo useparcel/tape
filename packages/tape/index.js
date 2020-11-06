@@ -21,8 +21,8 @@ import { DepGraph as Graph } from "dependency-graph";
 import { extname, dirname, resolve as resolvePath } from "path";
 import md5 from "md5";
 import mitt from "mitt";
-import HTMLPlugin from "@useparcel/tape-html-plugin";
-import CSSPlugin from "@useparcel/tape-css-plugin";
+import HTMLPlugin from "@useparcel/tape-html";
+import CSSPlugin from "@useparcel/tape-css";
 import WritePlugin from "./default-write-plugin";
 import isValidFilename from "valid-filename";
 

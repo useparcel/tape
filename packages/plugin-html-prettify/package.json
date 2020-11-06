@@ -1,5 +1,5 @@
 {
-  "name": "@useparcel/tape-html-minify-plugin",
+  "name": "@useparcel/tape-html-prettify",
   "version": "0.0.1",
   "main": "bundle.js",
   "browser": "bundle.js",
@@ -7,7 +7,6 @@
   "author": "Avi Goldman <avi@useparcel.com>",
   "license": "MIT",
   "dependencies": {
-    "html-crush": "^2.0.9",
-    "strip-html-comments": "^1.0.0"
+    "pretty": "^2.0.0"
   }
 }

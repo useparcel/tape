@@ -19,7 +19,7 @@ url.resolve = (fromUrl, toUrl) => {
 import juice from "juice/index.js";
 
 const CSSInlinePlugin = {
-  name: "CSSInlinePlugin",
+  name: "@useparcel/tape-css-inline",
   async optimize({ asset }) {
     if (asset.ext !== ".html") return asset;
 

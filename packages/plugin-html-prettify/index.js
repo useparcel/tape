@@ -2,7 +2,7 @@ import pretty from "pretty";
 
 export default (config = {}) => {
   return {
-    name: "HTMLPrettify",
+    name: "@useparcel/tape-html-prettify",
     async optimize({ asset }) {
       if (asset.ext !== ".html") {
         return asset;

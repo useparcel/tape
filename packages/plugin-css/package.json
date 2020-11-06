@@ -1,5 +1,5 @@
 {
-  "name": "@useparcel/tape-css-inline-plugin",
+  "name": "@useparcel/tape-css",
   "version": "0.0.1",
   "main": "bundle.js",
   "browser": "bundle.js",
@@ -7,7 +7,7 @@
   "author": "Avi Goldman <avi@useparcel.com>",
   "license": "MIT",
   "dependencies": {
-    "isomorphic-fetch": "^3.0.0",
-    "juice": "^7.0.0"
+    "is-absolute-url": "^3.0.3",
+    "magic-string": "^0.25.7"
   }
 }

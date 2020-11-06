@@ -4,7 +4,7 @@ const IMPORT_REGEX = /\@import\s*(?:url\()?['"](.*?)['"]\)?/g;
 const VALUE_URL_REGEX = /[:,].*?(?:url\()['"]?(.*?)['"]?\)/g;
 
 const CSSPlugin = {
-  name: "CSSPlugin",
+  name: "@useparcel/tape-css",
   resolve: { input: [".css"], output: ".css" },
   async transform({ asset, addDependency }) {
     let match;

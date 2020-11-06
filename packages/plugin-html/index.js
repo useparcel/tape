@@ -4,7 +4,7 @@ import addExternalDependencies from "./external";
 import addEmbeddedDependencies from "./embedded";
 
 const HTMLPlugin = {
-  name: "HTMLPlugin",
+  name: "@useparcel/tape-html",
   resolve: { input: ".html", output: ".html" },
   async transform({ asset, addDependency }) {
     const content = new MagicString(asset.content);

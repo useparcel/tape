@@ -1,5 +1,5 @@
 {
-  "name": "@useparcel/tape-html-plugin",
+  "name": "@useparcel/tape-html",
   "version": "0.0.1",
   "main": "bundle.js",
   "browser": "bundle.js",

@@ -8,7 +8,7 @@ export default (config = {}) => {
   };
 
   return {
-    name: "HTMLMinify",
+    name: "@useparcel/tape-html-minify",
     async optimize({ asset }) {
       if (asset.ext !== ".html") {
         return asset;

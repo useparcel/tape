@@ -59,11 +59,11 @@ const bundle = (name, dir) => (env, argv) => {
 };
 
 module.exports = [
-  bundle("tapeCSSInlinePlugin", "css-inline-plugin"),
-  bundle("tapeCSSPlugin", "css-plugin"),
-  bundle("tapeHTMLMinifyPlugin", "html-minify-plugin"),
-  bundle("tapeHTMLPlugin", "html-plugin"),
-  bundle("tapeHTMLPrettifyPlugin", "html-prettify-plugin"),
-  bundle("tapeSassPlugin", "sass-plugin"),
+  bundle("tapeCSSPlugin", "plugin-css"),
+  bundle("tapeCSSInlinePlugin", "plugin-css-inline"),
+  bundle("tapeHTMLPlugin", "plugin-html"),
+  bundle("tapeHTMLMinifyPlugin", "plugin-html-minify"),
+  bundle("tapeHTMLPrettifyPlugin", "plugin-html-prettify"),
+  bundle("tapeSassPlugin", "plugin-sass"),
   bundle("Tape", "tape"),
 ];
