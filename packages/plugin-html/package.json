@@ -6,6 +6,12 @@
   "module": "indexjs",
   "author": "Avi Goldman <avi@useparcel.com>",
   "license": "MIT",
+  "homepage": "https://github.com/useparcel/tape/tree/main/packages/plugin-html",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/useparcel/tape.git",
+    "directory": "packages/plugin-html"
+  },
   "dependencies": {
     "cheerio": "^0.22.0",
     "is-absolute-url": "^3.0.3",

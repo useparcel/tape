@@ -6,6 +6,12 @@
   "module": "indexjs",
   "author": "Avi Goldman <avi@useparcel.com>",
   "license": "MIT",
+  "homepage": "https://github.com/useparcel/tape/tree/main/packages/plugin-css-inline",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/useparcel/tape.git",
+    "directory": "packages/plugin-css-inline"
+  },
   "dependencies": {
     "isomorphic-fetch": "^3.0.0",
     "juice": "^7.0.0"

@@ -7,6 +7,12 @@
   "module": "indexjs",
   "author": "Avi Goldman <avi@useparcel.com>",
   "license": "MIT",
+  "homepage": "https://github.com/useparcel/tape",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/useparcel/tape.git",
+    "directory": "packages/tape"
+  },
   "dependencies": {
     "@useparcel/tape-css": "0.0.1",
     "@useparcel/tape-html": "0.0.1",

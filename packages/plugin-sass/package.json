@@ -7,6 +7,12 @@
   "module": "indexjs",
   "author": "Avi Goldman <avi@useparcel.com>",
   "license": "MIT",
+  "homepage": "https://github.com/useparcel/tape/tree/main/packages/plugin-sass",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/useparcel/tape.git",
+    "directory": "packages/plugin-sass"
+  },
   "dependencies": {
     "sass": "^1.28.0",
     "sass.js": "^0.11.1"

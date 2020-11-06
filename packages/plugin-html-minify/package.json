@@ -6,6 +6,12 @@
   "module": "indexjs",
   "author": "Avi Goldman <avi@useparcel.com>",
   "license": "MIT",
+  "homepage": "https://github.com/useparcel/tape/tree/main/packages/plugin-html-minify",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/useparcel/tape.git",
+    "directory": "packages/plugin-html-minify"
+  },
   "dependencies": {
     "html-crush": "^2.0.9",
     "strip-html-comments": "^1.0.0"
