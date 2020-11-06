@@ -3,8 +3,9 @@
   "version": "0.0.1",
   "description": "",
   "main": "bundle.js",
-  "module": "index.js",
-  "author": "",
+  "browser": "bundle.js",
+  "module": "indexjs",
+  "author": "Avi Goldman <avi@useparcel.com>",
   "license": "MIT",
   "dependencies": {
     "sass": "^1.28.0",

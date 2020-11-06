@@ -1,9 +1,10 @@
 {
   "name": "@useparcel/tape-css-plugin",
   "version": "0.0.1",
-  "description": "",
   "main": "bundle.js",
-  "author": "",
+  "browser": "bundle.js",
+  "module": "indexjs",
+  "author": "Avi Goldman <avi@useparcel.com>",
   "license": "MIT",
   "dependencies": {
     "is-absolute-url": "^3.0.3",

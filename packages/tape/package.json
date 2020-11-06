@@ -1,9 +1,11 @@
 {
   "name": "@useparcel/tape",
   "version": "0.0.1",
-  "description": "",
+  "description": "A browser-based HTML build tool",
   "main": "bundle.js",
-  "author": "",
+  "browser": "bundle.js",
+  "module": "indexjs",
+  "author": "Avi Goldman <avi@useparcel.com>",
   "license": "MIT",
   "dependencies": {
     "@useparcel/tape-css-plugin": "0.0.1",
