@@ -2,6 +2,7 @@
 
 exports[`CSSPlugin should for work for this complex example of all the things 1`] = `
 Object {
+  "diagnostics": Array [],
   "entry": "different-base/index.html",
   "files": Object {
     "different-base/found-image.gif": Object {
@@ -40,6 +41,7 @@ Object {
 
 exports[`CSSPlugin should ignore absolute urls 1`] = `
 Object {
+  "diagnostics": Array [],
   "entry": "/index.html",
   "files": Object {
     "/index.html": Object {

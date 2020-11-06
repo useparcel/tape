@@ -2,6 +2,7 @@
 
 exports[`CSSInlinePlugin should inline the css 1`] = `
 Object {
+  "diagnostics": Array [],
   "entry": "/index.html",
   "files": Object {
     "/index.html": Object {

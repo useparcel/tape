@@ -47,25 +47,6 @@ class Tape {
       validateGivenFile(file);
     }
 
-    for (const plugin of plugins) {
-      if (!isPlainObject(plugin)) {
-        throw new Error(
-          `Invalid plugin. Given ${typeof plugin} (${variablePreview(plugin)}).`
-        );
-      }
-
-      if (!has(plugin, "name")) {
-        throw Error("Plugins must have a name");
-      }
-
-      const count = plugins.filter(({ name }) => plugin.name === name).length;
-      if (count > 1) {
-        throw new Error(
-          `Plugin names must be unique: ${plugin.name} appeared ${count} times`
-        );
-      }
-    }
-
     this.plugins = defaultPlugins(plugins);
     this.entry = entry;
     this.files = mapKeys(
@@ -131,9 +112,20 @@ class Tape {
   async build() {
     const context = { env: "production" };
     const results = await this.#compile(context);
-    await this.#cleanup(context);
 
-    return pick(results, ["entry", "files"]);
+    const report = generateReporter();
+    await this.#cleanup({
+      ...context,
+      report,
+    });
+
+    return pick(
+      {
+        ...results,
+        diagnostics: [...results.diagnostics, ...report.release()],
+      },
+      ["entry", "files", "diagnostics"]
+    );
   }
 
   dev() {
@@ -143,6 +135,7 @@ class Tape {
     const cleanup = this.#cleanup.bind(this);
     const onChangeAsset = this.#onChangeAsset.bind(this);
     const idToPath = this.#idToPath.bind(this);
+    const pathToId = this.#pathToId.bind(this);
 
     /**
      * Triggers a compliation using cache
@@ -160,6 +153,8 @@ class Tape {
 
       const context = cache.get("context");
 
+      const report = generateReporter();
+
       if (context) {
         for (let id of updatedIds) {
           /********************************
@@ -169,8 +164,14 @@ class Tape {
             onChangeAsset({
               env: "development",
               asset: context.transformedAssets[id],
+              report,
             });
           }
+
+          // remove related diagnostics
+          context.diagnostics = context.diagnostics.filter(
+            ({ path }) => pathToId(path) === id
+          );
 
           if (context.graph.hasNode(id)) {
             // mark all dependents and embedded assets as updated
@@ -184,7 +185,7 @@ class Tape {
               })
             );
 
-            // TODO: avoid having to retransform dependents - we should only repackage them
+            // TODO: avoid having to retransform dependents - we should only repackage them not retransform them
 
             // clean up cache
             context.graph.removeNode(id);
@@ -193,6 +194,11 @@ class Tape {
             });
           }
         }
+
+        /**
+         * Add all the new diagonstics added by the onChange plugins
+         */
+        context.diagnostics = [...context.diagnostics, ...report.release()];
       }
 
       try {
@@ -246,7 +252,10 @@ class Tape {
           emitter.off(event, func);
         });
 
-        await cleanup({ env: "development" });
+        const report = generateReporter();
+        await cleanup({ env: "development", report });
+
+        return { diagnostics: report.release() };
       },
       on(event, func) {
         this._listeners.push({ event, func });
@@ -259,11 +268,11 @@ class Tape {
    * Runs the cleanup function of all plugins
    * @return {[type]} [description]
    */
-  async #cleanup({ env }) {
+  async #cleanup(props) {
     const plugins = this.plugins.filter((plugin) => isFunction(plugin.cleanup));
 
     for (const plugin of plugins) {
-      await this.#runPlugin(plugin, "cleanup", { env });
+      await this.#runPlugin(plugin, "cleanup", props);
     }
   }
 
@@ -287,16 +296,19 @@ class Tape {
      * Set up build context and utils
      */
     const entryId = pathToId(this.entry);
-    let { graph, transformedAssets, packagedAssets, resolveMap } = defaults(
-      {},
-      context,
-      {
-        graph: newGraph(),
-        transformedAssets: {},
-        packagedAssets: {},
-        resolveMap: {},
-      }
-    );
+    let {
+      graph,
+      transformedAssets,
+      packagedAssets,
+      resolveMap,
+      diagnostics,
+    } = defaults({}, context, {
+      graph: newGraph(),
+      transformedAssets: {},
+      packagedAssets: {},
+      resolveMap: {},
+      diagnostics: [],
+    });
 
     function addDependency({ asset, id, path }) {
       id = id || pathToId(path, asset.dir);
@@ -317,6 +329,8 @@ class Tape {
       return packagedAssets[id].content;
     }
 
+    const report = generateReporter();
+
     const generateAssetContext = (asset, context) => {
       return pick(
         {
@@ -328,8 +342,14 @@ class Tape {
             resolveAsset({ id, path, dir: asset.dir }),
           getAssetContent: ({ id, path }) =>
             getAssetContent({ id, path, dir: asset.dir }),
+          report: (diagnostic) => {
+            report({
+              ...diagnostic,
+              path: asset.path,
+            });
+          },
         },
-        ["asset", "env", ...context]
+        ["asset", "env", "report", ...context]
       );
     };
 
@@ -452,6 +472,8 @@ class Tape {
       }
     }
 
+    diagnostics = [...diagnostics, ...report.release()];
+
     return {
       entry: resolveAsset({ path: this.entry }),
       files: mapValues(
@@ -467,12 +489,14 @@ class Tape {
           };
         }
       ),
+      diagnostics,
       // should use the same keys as the declaration above
       context: {
         graph,
         transformedAssets,
         packagedAssets,
         resolveMap,
+        diagnostics,
       },
     };
   }
@@ -536,7 +560,10 @@ class Tape {
     /**
      * return the asset and all embedded assets
      */
-    return [transformingAsset, ...generatedAssets];
+    return [
+      transformingAsset,
+      ...generatedAssets.map((a) => ({ ...a, path: asset.path })),
+    ];
   }
 
   /**
@@ -600,15 +627,28 @@ class Tape {
   /**
    * Runs the given method of a plugin within the plugin namespace
    */
-  #runPlugin(plugin, method, { env, ...props }) {
-    return plugin[method]({
-      env,
-      cache: cacheNamespace(
-        env === "development" ? this.#cache : new Map(),
-        plugin.name
-      ),
-      ...props,
-    });
+  async #runPlugin(plugin, method, { env, report, ...props }) {
+    try {
+      return await plugin[method]({
+        env,
+        cache: cacheNamespace(
+          env === "development" ? this.#cache : new Map(),
+          plugin.name
+        ),
+        report: (diagnostic) => report({ ...diagnostic, source: plugin.name }),
+        ...props,
+      });
+    } catch (e) {
+      if (e.diagnostic) {
+        throw e;
+      }
+
+      report({
+        source: plugin.name,
+        message: e.message,
+        type: "error",
+      });
+    }
   }
 
   /**
@@ -751,11 +791,110 @@ function variablePreview(v) {
   }
 }
 
+/**
+ * Set default plugins
+ */
 function defaultPlugins(plugins) {
+  for (const plugin of plugins) {
+    if (!isPlainObject(plugin)) {
+      throw new Error(
+        `Invalid plugin. Given ${typeof plugin} (${variablePreview(plugin)}).`
+      );
+    }
+
+    if (!has(plugin, "name")) {
+      throw Error("Plugins must have a name");
+    }
+
+    const count = plugins.filter(({ name }) => plugin.name === name).length;
+    if (count > 1) {
+      throw new Error(
+        `Plugin names must be unique: ${plugin.name} appeared ${count} times`
+      );
+    }
+  }
+
   return [
     HTMLPlugin,
     CSSPlugin,
     ...plugins,
     ...(plugins.find(({ write }) => !!write) ? [] : [WritePlugin]),
   ];
+}
+
+/**
+ * Returns a reporter for plugins
+ */
+function generateReporter() {
+  let diagnostics = [];
+
+  /**
+   * diagnostic = {
+   *   type               Enum(error | warning | info)
+   *   source             String - Plugin source
+   *   message            String - General explanation of the error
+   *   path               String - The file path
+   *   loc.start.line     Number - the 1-indexed line of the start of the problem
+   *   loc.start.column   Number - the 1-indexed column of the start of the problem
+   *   loc.end.line       Number - the 1-indexed line of the end of the problem
+   *   loc.end.column     Number - the 1-indexed column of the end of the problem
+   *   fix                String - the string to replace the given location to fix the problem
+   * }
+   */
+  function report(diagnostic) {
+    diagnostic = pick(
+      {
+        type: "error",
+        source: "internal",
+        message: "An unknown error occurred.",
+        path: null,
+        ...diagnostic,
+      },
+      [
+        "type",
+        "source",
+        "message",
+        "path",
+        "loc.start.line",
+        "loc.start.column",
+        "loc.end.line",
+        "loca.end.column",
+        "fix",
+      ]
+    );
+
+    /**
+     * Clean up bad location data
+     */
+    if (
+      diagnostic.loc &&
+      (!isPlainObject(diagnostic.loc) ||
+        !(
+          has(diagnostic, "loc.start.line") &&
+          has(diagnostic, "loc.start.column")
+        ))
+    ) {
+      delete diagnostic.loc;
+    }
+
+    /**
+     * Clean up bad diagonstic type
+     */
+    if (!["error", "warning", "info"].includes(diagnostic.type)) {
+      diagnostic.type = "error";
+    }
+
+    if (diagnostic.type === "error") {
+      const error = new Error(diagnostic.message);
+      error.diagnostic = diagnostic;
+
+      throw error;
+    }
+
+    diagnostics.push(diagnostic);
+  }
+
+  report.release = () => diagnostics;
+
+  return report;
 }

@@ -6,7 +6,7 @@ export default ({ asset, addDependency, content }) => {
   walk(
     asset.content,
     "style",
-    ({ attrs, raw, startIndex, content: { value } }) => {
+    ({ attrs, raw, startIndex, content: { value, offset } }) => {
       let type = "css";
       if (attrs && attrs.type) {
         type = attrs.type.value.split("/")[1];
@@ -25,6 +25,7 @@ export default ({ asset, addDependency, content }) => {
         ext: `.${type}`,
         content: value,
         embedded: true,
+        offset,
       });
     }
   );

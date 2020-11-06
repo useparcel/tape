@@ -2,6 +2,7 @@
 
 exports[`SassPlugin should convert an external sass file to css 1`] = `
 Object {
+  "diagnostics": Array [],
   "entry": "/index.html",
   "files": Object {
     "/index.html": Object {
@@ -27,6 +28,7 @@ Object {
 
 exports[`SassPlugin should convert embedded sass to css 1`] = `
 Object {
+  "diagnostics": Array [],
   "entry": "/index.html",
   "files": Object {
     "/index.html": Object {

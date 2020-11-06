@@ -33,23 +33,27 @@ const handler = (cb) => (err, result) => {
 export default {
   name: "SassPlugin",
   resolve: { input: [".scss", ".sass"], output: ".css" },
-  transform({ asset }) {
+  transform({ asset, report }) {
     return new Promise((resolve, reject) => {
       compile(asset.content, (error, content) => {
         if (error) {
-          error.path = asset.path;
-          error.loc = {
-            line: error.line,
-            column: error.column,
-          };
-
-          return reject(error);
+          reject(error);
         }
 
         return resolve({
           ...asset,
           content,
         });
+      });
+    }).catch((error) => {
+      report({
+        message: error.message,
+        loc: {
+          start: {
+            line: error.line,
+            column: error.column,
+          },
+        },
       });
     });
   },

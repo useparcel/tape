@@ -64,4 +64,36 @@ describe("SassPlugin", () => {
     const results = await tape.build();
     expect(results).toMatchSnapshot();
   });
+
+  test("should throw an error with invalid sass", async () => {
+    const tape = new Tape({
+      entry: "/index.html",
+      plugins: [SassPlugin],
+      files: {
+        "/index.html": {
+          content: `
+            <html>
+              <head>
+                <link rel="stylesheet" href="/style.scss">
+              </head>
+              <body>
+                body
+              </body>
+            </html>
+          `,
+        },
+        "/style.scss": {
+          content: `
+            $my-color: blue // missing a semi-colon
+
+            body {
+              background: $my-color;
+            }
+          `,
+        },
+      },
+    });
+
+    await expect(tape.build()).rejects.toThrow();
+  });
 });
