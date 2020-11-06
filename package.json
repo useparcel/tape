@@ -1,8 +1,8 @@
 {
-  "name": "tape",
-  "version": "0.0.1",
+  "name": "root",
+  "private": true,
   "scripts": {
-    "clean": "rm **/bundle.js && rm -rf **/node_modules",
+    "clean": "rm **/bundle.js* && rm -rf **/node_modules",
     "bootstrap": "npm install && npx lerna bootstrap",
     "dev": "npx webpack --mode development --watch",
     "build": "npx webpack --mode production",
