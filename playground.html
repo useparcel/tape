@@ -83,8 +83,8 @@
       '.html': 'text/html',
     }
 
-    const urlWrite = {
-      name: 'urlWrite',
+    const urlWrite = () => ({
+      name: 'url-write',
       write({ asset, cache }) {
         if (asset.isEntry) {
           return `${asset.path.replace(
@@ -108,7 +108,7 @@
           URL.revokeObjectURL(objectURL)
         }
       }
-    }
+    })
 
     const iframe = document.querySelector('iframe')
     const error = document.querySelector('#error')
@@ -123,7 +123,7 @@
       plugins: [
         tapeSassPlugin.default,
         tapeCSSInlinePlugin.default,
-        tapeHTMLMinifyPlugin.default(),
+        tapeHTMLMinifyPlugin.default,
         // tapeHTMLPrettifyPlugin.default(),
         urlWrite,
       ],
