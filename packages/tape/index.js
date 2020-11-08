@@ -16,6 +16,7 @@ import {
   uniq,
   isMap,
   isPlainObject,
+  isArray,
 } from "lodash";
 import { DepGraph as Graph } from "dependency-graph";
 import { extname, dirname, resolve as resolvePath } from "path";
@@ -47,7 +48,7 @@ class Tape {
       validateGivenFile(file);
     }
 
-    this.plugins = defaultPlugins(plugins);
+    this.plugins = loadPlugins(plugins);
     this.entry = entry;
     this.files = mapKeys(
       mapValues(cloneDeep(files), this.#fileDefaults.bind(this)),
@@ -65,7 +66,7 @@ class Tape {
     }
 
     if (plugins) {
-      this.plugins = defaultPlugins(plugins);
+      this.plugins = loadPlugins(plugins);
 
       const context = this.#cache.get("context");
       // Mark everything as updated if we change plugins
@@ -794,11 +795,35 @@ function variablePreview(v) {
 /**
  * Set default plugins
  */
-function defaultPlugins(plugins) {
-  for (const plugin of plugins) {
+function loadPlugins(pluginLoaders) {
+  pluginLoaders = [HTMLPlugin, CSSPlugin, ...pluginLoaders];
+
+  let plugins = [];
+  for (let input of pluginLoaders) {
+    let pluginLoader,
+      config = {};
+    if (isArray(input)) {
+      pluginLoader = get(input, 0);
+      config = get(input, 1, {});
+    } else {
+      pluginLoader = input;
+    }
+
+    if (!isFunction(pluginLoader)) {
+      throw new Error(
+        `Invalid plugin. Expected function, given ${typeof pluginLoader} (${variablePreview(
+          plugin
+        )}).`
+      );
+    }
+
+    const plugin = pluginLoader(config);
+
     if (!isPlainObject(plugin)) {
       throw new Error(
-        `Invalid plugin. Given ${typeof plugin} (${variablePreview(plugin)}).`
+        `Invalid plugin. Plugin loader returned ${typeof plugin} (${variablePreview(
+          plugin
+        )}).`
       );
     }
 
@@ -807,18 +832,19 @@ function defaultPlugins(plugins) {
     }
 
     const count = plugins.filter(({ name }) => plugin.name === name).length;
-    if (count > 1) {
+
+    if (count >= 1) {
       throw new Error(
         `Plugin names must be unique: ${plugin.name} appeared ${count} times`
       );
     }
+
+    plugins.push(plugin);
   }
 
   return [
-    HTMLPlugin,
-    CSSPlugin,
     ...plugins,
-    ...(plugins.find(({ write }) => !!write) ? [] : [WritePlugin]),
+    ...(plugins.find(({ write }) => isFunction(write)) ? [] : [WritePlugin]),
   ];
 }
 

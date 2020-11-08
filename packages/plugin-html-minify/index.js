@@ -1,7 +1,7 @@
 import { crush, defaults, version } from "html-crush";
 import stripComments from "strip-html-comments";
 
-export default (config = {}) => {
+export default function (config) {
   config = {
     ...defaults,
     ...config,
@@ -34,4 +34,4 @@ export default (config = {}) => {
       };
     },
   };
-};
+}

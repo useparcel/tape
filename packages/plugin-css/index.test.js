@@ -100,15 +100,15 @@ describe("CSSPlugin", () => {
      * This changes the output urls. Otherwise the input and output look
      * the same and that isn't a very good test.
      */
-    const writeDifferentUrl = {
-      name: "writeDifferentUrl",
+    const writeDifferentUrl = () => ({
+      name: "write-different-url",
       write({ asset }) {
         return `different-base${asset.path.replace(
           new RegExp(`${asset.originalExt}$`),
           asset.ext
         )}`;
       },
-    };
+    });
 
     /**
      * This config has the following important features:

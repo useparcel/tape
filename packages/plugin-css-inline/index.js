@@ -18,37 +18,37 @@ url.resolve = (fromUrl, toUrl) => {
  */
 import juice from "juice/index.js";
 
-const CSSInlinePlugin = {
-  name: "@useparcel/tape-css-inline",
-  async optimize({ asset }) {
-    if (asset.ext !== ".html") return asset;
+export default function (config) {
+  return {
+    name: "@useparcel/tape-css-inline",
+    async optimize({ asset }) {
+      if (asset.ext !== ".html") return asset;
 
-    return {
-      ...asset,
-      content: juice(asset.content),
-    };
+      return {
+        ...asset,
+        content: juice(asset.content, config),
+      };
 
-    // return new Promise((resolve, reject) => {
-    //   juice.juiceResources(
-    //     asset.content,
-    //     {
-    //       webResources: {
-    //         relativeTo: asset.path,
-    //       },
-    //     },
-    //     (err, content) => {
-    //       if (err) {
-    //         reject(err);
-    //       } else {
-    //         resolve({
-    //           ...asset,
-    //           content,
-    //         });
-    //       }
-    //     }
-    //   );
-    // });
-  },
-};
-
-export default CSSInlinePlugin;
+      // return new Promise((resolve, reject) => {
+      //   juice.juiceResources(
+      //     asset.content,
+      //     {
+      //       webResources: {
+      //         relativeTo: asset.path,
+      //       },
+      //     },
+      //     (err, content) => {
+      //       if (err) {
+      //         reject(err);
+      //       } else {
+      //         resolve({
+      //           ...asset,
+      //           content,
+      //         });
+      //       }
+      //     }
+      //   );
+      // });
+    },
+  };
+}

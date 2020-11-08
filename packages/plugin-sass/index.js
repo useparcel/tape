@@ -30,31 +30,33 @@ const handler = (cb) => (err, result) => {
   }
 };
 
-export default {
-  name: "@useparcel/tape-sass",
-  resolve: { input: [".scss", ".sass"], output: ".css" },
-  transform({ asset, report }) {
-    return new Promise((resolve, reject) => {
-      compile(asset.content, (error, content) => {
-        if (error) {
-          reject(error);
-        }
+export default function () {
+  return {
+    name: "@useparcel/tape-sass",
+    resolve: { input: [".scss", ".sass"], output: ".css" },
+    transform({ asset, report }) {
+      return new Promise((resolve, reject) => {
+        compile(asset.content, (error, content) => {
+          if (error) {
+            reject(error);
+          }
 
-        return resolve({
-          ...asset,
-          content,
+          return resolve({
+            ...asset,
+            content,
+          });
+        });
+      }).catch((error) => {
+        report({
+          message: error.message,
+          loc: {
+            start: {
+              line: error.line,
+              column: error.column,
+            },
+          },
         });
       });
-    }).catch((error) => {
-      report({
-        message: error.message,
-        loc: {
-          start: {
-            line: error.line,
-            column: error.column,
-          },
-        },
-      });
-    });
-  },
-};
+    },
+  };
+}

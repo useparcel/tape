@@ -1,6 +1,6 @@
 import pretty from "pretty";
 
-export default (config = {}) => {
+export default function (config) {
   return {
     name: "@useparcel/tape-html-prettify",
     async optimize({ asset }) {
@@ -14,4 +14,4 @@ export default (config = {}) => {
       };
     },
   };
-};
+}

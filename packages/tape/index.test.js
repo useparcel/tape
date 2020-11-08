@@ -83,7 +83,7 @@ describe("constructor", () => {
       ).toBeTruthy();
     });
 
-    test("should make sure all plugin are objects", () => {
+    test("should make sure all plugins are functions", () => {
       expect(
         () =>
           new Tape({
@@ -93,12 +93,22 @@ describe("constructor", () => {
       ).toThrow(/invalid plugin/i);
     });
 
-    test("should make sure all plugin have names", () => {
+    test("should make sure all plugins return objects", () => {
       expect(
         () =>
           new Tape({
             ...validConfig,
-            plugins: [{}],
+            plugins: [() => "woops"],
+          })
+      ).toThrow(/invalid plugin/i);
+    });
+
+    test("should make sure all plugins have names", () => {
+      expect(
+        () =>
+          new Tape({
+            ...validConfig,
+            plugins: [() => ({})],
           })
       ).toThrow(/name/);
     });
@@ -109,9 +119,9 @@ describe("constructor", () => {
           new Tape({
             ...validConfig,
             plugins: [
-              { name: "pluginName" },
-              { name: "aDifferentPluginName" },
-              { name: "pluginName" },
+              () => ({ name: "pluginName" }),
+              () => ({ name: "aDifferentPluginName" }),
+              () => ({ name: "pluginName" }),
             ],
           })
       ).toThrow(/pluginName/);
@@ -314,10 +324,11 @@ describe("dev", () => {
      * - dependency from entry (/style.css)
      * - dependency from depencency (/reset.css)
      */
-    const transformerPlugin = {
+    const transform = jest.fn(({ asset }) => asset);
+    const transformerPlugin = () => ({
       name: "transformerPlugin",
-      transform: jest.fn(({ asset }) => asset),
-    };
+      transform: transform,
+    });
     const config = {
       entry: "/index.html",
       plugins: [transformerPlugin],
@@ -360,8 +371,8 @@ describe("dev", () => {
 
     manager.on("ready", ({ startedAt, endedAt, ...results }) => {
       expect(results).toMatchSnapshot();
-      expect(transformerPlugin.transform).toHaveBeenCalledTimes(4);
-      transformerPlugin.transform.mockClear();
+      expect(transform).toHaveBeenCalledTimes(4);
+      transform.mockClear();
 
       /**
        * Trigger an update
@@ -397,7 +408,7 @@ describe("dev", () => {
      */
     manager.on("end", async ({ startedAt, endedAt, ...results }) => {
       expect(results).toMatchSnapshot();
-      expect(transformerPlugin.transform).toHaveBeenCalledTimes(4);
+      expect(transform).toHaveBeenCalledTimes(4);
       await manager.close();
       done();
     });
@@ -567,26 +578,43 @@ describe("update", () => {
 
 // TODO: duplicate all tests for dev mode too?
 describe("plugin system", () => {
+  test("loads plugins with the given config", async () => {
+    // run only on txt (0 times)
+    const plugin = jest.fn(() => ({
+      name: "ok-plugin",
+    }));
+
+    const tape = new Tape({
+      ...validConfig,
+      plugins: [[plugin, "config goes here"]],
+    });
+
+    expect(plugin).toHaveBeenCalledWith("config goes here");
+  });
+
   test("[build] runs all transform functions", async () => {
     // run only on txt (0 times)
-    const transformPlugin1 = {
+    const transform1 = jest.fn(({ asset }) => asset);
+    const transformPlugin1 = () => ({
       name: "transformPlugin1",
       resolve: { input: [".txt"], output: ".txt" },
-      transform: jest.fn(({ asset }) => asset),
-    };
+      transform: transform1,
+    });
 
     // run only on html (1 time)
-    const transformPlugin2 = {
+    const transform2 = jest.fn(({ asset }) => asset);
+    const transformPlugin2 = () => ({
       name: "transformPlugin2",
       resolve: { input: [".html"], output: ".html" },
-      transform: jest.fn(({ asset }) => asset),
-    };
+      transform: transform2,
+    });
 
     // run on all (3 times)
-    const transformPlugin3 = {
+    const transform3 = jest.fn(({ asset }) => asset);
+    const transformPlugin3 = () => ({
       name: "transformPlugin3",
-      transform: jest.fn(({ asset }) => asset),
-    };
+      transform: transform3,
+    });
 
     const tape = new Tape({
       entry: "/index.html",
@@ -609,21 +637,23 @@ describe("plugin system", () => {
     });
     await tape.build();
 
-    expect(transformPlugin1.transform).toHaveBeenCalledTimes(0);
-    expect(transformPlugin2.transform).toHaveBeenCalledTimes(1);
-    expect(transformPlugin3.transform).toHaveBeenCalledTimes(3);
+    expect(transform1).toHaveBeenCalledTimes(0);
+    expect(transform2).toHaveBeenCalledTimes(1);
+    expect(transform3).toHaveBeenCalledTimes(3);
   });
 
   test("[build] runs just the first package plugin (no resolve)", async () => {
-    const packagePlugin1 = {
+    const package1 = jest.fn(({ asset }) => asset);
+    const packagePlugin1 = () => ({
       name: "packagePlugin1",
-      package: jest.fn(({ asset }) => asset),
-    };
+      package: package1,
+    });
 
-    const packagePlugin2 = {
+    const package2 = jest.fn(({ asset }) => asset);
+    const packagePlugin2 = () => ({
       name: "packagePlugin2",
-      package: jest.fn(({ asset }) => asset),
-    };
+      package: package2,
+    });
 
     const tape = new Tape({
       entry: "/index.html",
@@ -639,22 +669,24 @@ describe("plugin system", () => {
     });
     await tape.build();
 
-    expect(packagePlugin1.package).toHaveBeenCalled();
-    expect(packagePlugin2.package).toHaveBeenCalledTimes(0);
+    expect(package1).toHaveBeenCalled();
+    expect(package2).toHaveBeenCalledTimes(0);
   });
 
   test("[build] runs just the first package plugin (with resolve)", async () => {
-    const packagePlugin1 = {
+    const package1 = jest.fn(({ asset }) => asset);
+    const packagePlugin1 = () => ({
       name: "packagePlugin1",
       resolve: { input: [".txt"], output: ".txt" },
-      package: jest.fn(({ asset }) => asset),
-    };
+      package: package1,
+    });
 
-    const packagePlugin2 = {
+    const package2 = jest.fn(({ asset }) => asset);
+    const packagePlugin2 = () => ({
       name: "packagePlugin2",
       resolve: { input: [".another-ext"], output: ".another-ext" },
-      package: jest.fn(({ asset }) => asset),
-    };
+      package: package2,
+    });
 
     const tape = new Tape({
       entry: "/index.html",
@@ -670,22 +702,24 @@ describe("plugin system", () => {
     });
     await tape.build();
 
-    expect(packagePlugin1.package).toHaveBeenCalled();
-    expect(packagePlugin2.package).toHaveBeenCalledTimes(0);
+    expect(package1).toHaveBeenCalled();
+    expect(package2).toHaveBeenCalledTimes(0);
   });
 
   test("[build] runs all optimizer functions", async () => {
-    const optimizerPlugin1 = {
+    const optimizer1 = jest.fn(({ asset }) => asset);
+    const optimizerPlugin1 = () => ({
       name: "optimizerPlugin1",
-      optimize: jest.fn(({ asset }) => asset),
-    };
+      optimize: optimizer1,
+    });
 
     // run only for matching assets
-    const optimizerPlugin2 = {
+    const optimizer2 = jest.fn(({ asset }) => asset);
+    const optimizerPlugin2 = () => ({
       name: "optimizerPlugin2",
       resolve: { input: [".css"], output: ".css" },
-      optimize: jest.fn(({ asset }) => asset),
-    };
+      optimize: optimizer2,
+    });
 
     const tape = new Tape({
       entry: "/index.html",
@@ -701,20 +735,22 @@ describe("plugin system", () => {
     });
     await tape.build();
 
-    expect(optimizerPlugin1.optimize).toHaveBeenCalledTimes(2);
-    expect(optimizerPlugin2.optimize).toHaveBeenCalledTimes(1);
+    expect(optimizer1).toHaveBeenCalledTimes(2);
+    expect(optimizer2).toHaveBeenCalledTimes(1);
   });
 
   test("[build] runs just the first write plugin", async () => {
-    const writePlugin1 = {
+    const write1 = jest.fn();
+    const writePlugin1 = () => ({
       name: "writePlugin1",
-      write: jest.fn(),
-    };
+      write: write1,
+    });
 
-    const writePlugin2 = {
+    const write2 = jest.fn();
+    const writePlugin2 = () => ({
       name: "writePlugin2",
-      write: jest.fn(),
-    };
+      write: write2,
+    });
 
     const tape = new Tape({
       ...validConfig,
@@ -722,20 +758,21 @@ describe("plugin system", () => {
     });
     await tape.build();
 
-    expect(writePlugin1.write).toHaveBeenCalled();
-    expect(writePlugin2.write).toHaveBeenCalledTimes(0);
+    expect(write1).toHaveBeenCalled();
+    expect(write2).toHaveBeenCalledTimes(0);
   });
 
   test("[build] runs all clean up functions", async () => {
-    const cleanupPlugin1 = {
+    const cleanup1 = jest.fn();
+    const cleanupPlugin1 = () => ({
       name: "cleanupPlugin1",
-      cleanup: jest.fn(),
-    };
-
-    const cleanupPlugin2 = {
+      cleanup: cleanup1,
+    });
+    const cleanup2 = jest.fn();
+    const cleanupPlugin2 = () => ({
       name: "cleanupPlugin2",
-      cleanup: jest.fn(),
-    };
+      cleanup: cleanup2,
+    });
 
     const tape = new Tape({
       ...validConfig,
@@ -743,15 +780,16 @@ describe("plugin system", () => {
     });
     await tape.build();
 
-    expect(cleanupPlugin1.cleanup).toHaveBeenCalled();
-    expect(cleanupPlugin2.cleanup).toHaveBeenCalled();
+    expect(cleanup1).toHaveBeenCalled();
+    expect(cleanup2).toHaveBeenCalled();
   });
 
   test("[dev] should trigger onChange on dependents and embedded dependencies", async (done) => {
-    const onChangePlugin = {
+    const onChange = jest.fn();
+    const onChangePlugin = () => ({
       name: "onChangePlugin",
-      onChange: jest.fn(),
-    };
+      onChange,
+    });
 
     const tape = new Tape({
       entry: "index.html",
@@ -811,7 +849,7 @@ describe("plugin system", () => {
     });
 
     manager.on("end", async () => {
-      expect(onChangePlugin.onChange).toHaveBeenCalledTimes(4);
+      expect(onChange).toHaveBeenCalledTimes(4);
       await manager.close();
       done();
     });
