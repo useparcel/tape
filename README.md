@@ -99,9 +99,24 @@ transform > package > optimize > write
 
 ## Plugins
 
+```
+function(pluginConfig) {
+  return {
+    name: 'plugin-name',
+    // functions go here
+  }
+}
+```
+
+### Functions
+`transform` - 1:n
+`package` - 1
+`optimize` - 0:n
+`write`- 1
+
 ### Building a plugin
 
-### Previous art
+## Previous art
 * https://www.npmjs.com/package/smooshpack
 * https://github.com/snowpackjs/snowpack
 * https://github.com/parcel-bundler/parcel
