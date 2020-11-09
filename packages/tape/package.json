@@ -1,6 +1,6 @@
 {
   "name": "@useparcel/tape",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "description": "A browser-based HTML build tool",
   "main": "bundle.js",
   "browser": "bundle.js",
@@ -14,8 +14,8 @@
     "directory": "packages/tape"
   },
   "dependencies": {
-    "@useparcel/tape-css": "0.0.1",
-    "@useparcel/tape-html": "0.0.1",
+    "@useparcel/tape-css": "0.0.0",
+    "@useparcel/tape-html": "0.0.0",
     "dependency-graph": "^0.9.0",
     "lodash": "^4.17.20",
     "md5": "^2.3.0",
