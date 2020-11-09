@@ -1,6 +1,6 @@
 {
   "name": "@useparcel/tape-html-prettify",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "bundle.js",
   "browser": "bundle.js",
   "module": "indexjs",
