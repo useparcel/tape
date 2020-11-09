@@ -15,5 +15,8 @@
   "dependencies": {
     "is-absolute-url": "^3.0.3",
     "magic-string": "^0.25.7"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

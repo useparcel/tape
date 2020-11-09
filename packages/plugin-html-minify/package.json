@@ -15,5 +15,8 @@
   "dependencies": {
     "html-crush": "^2.0.9",
     "strip-html-comments": "^1.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
