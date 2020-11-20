@@ -19,7 +19,7 @@ We can get production results either by calling `build()`. We can also call `dev
 
 ```js
 import Tape from '@useparcel/tape'
-import cssInline from '@useparce/plugin-css-inline'
+import cssInline from '@useparcel/tape-css-inline'
 
 const tape = new Tape({
   entry: '/index.html',

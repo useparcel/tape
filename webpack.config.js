@@ -1,14 +1,13 @@
 const webpack = require("webpack");
 
-const bundle = (name, dir) => (env, argv) => {
+const bundle = (dir) => (env, argv) => {
   return {
     entry: `${__dirname}/packages/${dir}/index.js`,
     devtool: argv.mode === "development" ? "source-map" : false,
     output: {
-      path: `${__dirname}/packages/${dir}`,
-      filename: "bundle.js",
-      library: name,
-      libraryTarget: "umd",
+      path: `${__dirname}/packages/${dir}/dist`,
+      filename: "index.js",
+      libraryTarget: "commonjs2",
     },
     plugins: [
       // node polyfills
@@ -59,11 +58,11 @@ const bundle = (name, dir) => (env, argv) => {
 };
 
 module.exports = [
-  bundle("tapeCSSPlugin", "plugin-css"),
-  bundle("tapeCSSInlinePlugin", "plugin-css-inline"),
-  bundle("tapeHTMLPlugin", "plugin-html"),
-  bundle("tapeHTMLMinifyPlugin", "plugin-html-minify"),
-  bundle("tapeHTMLPrettifyPlugin", "plugin-html-prettify"),
-  bundle("tapeSassPlugin", "plugin-sass"),
-  bundle("Tape", "tape"),
+  bundle("plugin-css"),
+  bundle("plugin-css-inline"),
+  bundle("plugin-html"),
+  bundle("plugin-html-minify"),
+  bundle("plugin-html-prettify"),
+  // bundle("plugin-sass"),
+  bundle("tape"),
 ];

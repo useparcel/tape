@@ -1,9 +1,7 @@
 {
   "name": "@useparcel/tape-html-minify",
   "version": "0.0.2",
-  "main": "bundle.js",
-  "browser": "bundle.js",
-  "module": "indexjs",
+  "main": "dist/index.js",
   "author": "Avi Goldman <avi@useparcel.com>",
   "license": "MIT",
   "homepage": "https://github.com/useparcel/tape/tree/main/packages/plugin-html-minify",
