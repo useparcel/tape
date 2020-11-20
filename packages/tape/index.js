@@ -216,7 +216,7 @@ class Tape {
 
         const endedAt = Date.now();
         emitter.emit(end, {
-          ...pick(results, ["entry", "files"]),
+          ...pick(results, ["entry", "files", "diagnostics"]),
           startedAt,
           endedAt,
           isLatest,
@@ -242,7 +242,7 @@ class Tape {
      * this gives the event handlers a chance to be attached
      */
     setTimeout(() => {
-      triggerCompile([], { start: "init", end: "ready" });
+      triggerCompile([]);
     });
 
     return {
