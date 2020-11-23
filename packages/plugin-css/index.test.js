@@ -103,8 +103,8 @@ describe("CSSPlugin", () => {
     const writeDifferentUrl = () => ({
       name: "write-different-url",
       write({ asset }) {
-        return `different-base${asset.path.replace(
-          new RegExp(`${asset.originalExt}$`),
+        return `different-base${asset.source.path.replace(
+          new RegExp(`${asset.source.ext}$`),
           asset.ext
         )}`;
       },

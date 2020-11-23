@@ -311,8 +311,8 @@ class Tape {
       diagnostics: [],
     });
 
-    function addDependency({ asset, id, path }) {
-      id = id || pathToId(path, asset.dir);
+    function addDependency({ asset, id, path, dir }) {
+      id = id || pathToId(path, dir);
 
       graph.addNode(id);
       graph.addDependency(asset.id, id);
@@ -338,15 +338,15 @@ class Tape {
           asset,
           env,
           addDependency: ({ id, path }) =>
-            addDependency({ asset, id, path, dir: asset.dir }),
+            addDependency({ asset, id, path, dir: asset.source.dir }),
           resolveAsset: ({ id, path }) =>
-            resolveAsset({ id, path, dir: asset.dir }),
+            resolveAsset({ id, path, dir: asset.source.dir }),
           getAssetContent: ({ id, path }) =>
-            getAssetContent({ id, path, dir: asset.dir }),
+            getAssetContent({ id, path, dir: asset.source.dir }),
           report: (diagnostic) => {
             report({
               ...diagnostic,
-              path: asset.path,
+              path: asset.source.path,
             });
           },
         },
@@ -529,12 +529,7 @@ class Tape {
           ...props,
         })
       );
-      generatedAssets.push(
-        ...embeddedAssets.map((asset) => ({
-          ...asset,
-          dir: transformedAsset.dir,
-        }))
-      );
+      generatedAssets.push(...embeddedAssets);
 
       /**
        * update the asset we are transforming
@@ -563,7 +558,10 @@ class Tape {
      */
     return [
       transformingAsset,
-      ...generatedAssets.map((a) => ({ ...a, path: asset.path })),
+      ...generatedAssets.map((a) => ({
+        ...a,
+        source: transformingAsset.source,
+      })),
     ];
   }
 
@@ -678,12 +676,15 @@ class Tape {
 
     return {
       ...file,
-      path,
-      ext,
-      originalExt: ext,
-      name: basename(path, ext),
-      dir: dirname(path),
       id: this.#pathToId(path),
+      ext,
+      embedded: false,
+      source: {
+        ext,
+        path,
+        name: basename(path, ext),
+        dir: dirname(path),
+      },
     };
   }
 }

@@ -1,8 +1,8 @@
 const DefaultWritePlugin = {
   name: "default-write-plugin",
   async write({ asset, cache }) {
-    const path = `${asset.path.replace(
-      new RegExp(`${asset.originalExt}$`),
+    const path = `${asset.source.path.replace(
+      new RegExp(`${asset.source.ext}$`),
       asset.ext
     )}`;
 

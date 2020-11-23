@@ -34,7 +34,7 @@ export default function (config) {
       //     asset.content,
       //     {
       //       webResources: {
-      //         relativeTo: asset.path,
+      //         relativeTo: asset.source.path,
       //       },
       //     },
       //     (err, content) => {
