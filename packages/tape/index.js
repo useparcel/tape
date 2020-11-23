@@ -19,7 +19,7 @@ import {
   isArray,
 } from "lodash";
 import { DepGraph as Graph } from "dependency-graph";
-import { extname, dirname, resolve as resolvePath } from "path";
+import { extname, dirname, basename, resolve as resolvePath } from "path";
 import md5 from "md5";
 import mitt from "mitt";
 import HTMLPlugin from "@useparcel/tape-html";
@@ -674,11 +674,14 @@ class Tape {
    * Sets the default values for a given file and path
    */
   #fileDefaults(file, path) {
+    const ext = extname(path);
+
     return {
       ...file,
       path,
-      ext: extname(path),
-      originalExt: extname(path),
+      ext,
+      originalExt: ext,
+      name: basename(path, ext),
       dir: dirname(path),
       id: this.#pathToId(path),
     };

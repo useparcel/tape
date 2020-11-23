@@ -63,6 +63,6 @@ module.exports = [
   bundle("plugin-html"),
   bundle("plugin-html-minify"),
   bundle("plugin-html-prettify"),
-  // bundle("plugin-sass"),
+  bundle("plugin-sass"),
   bundle("tape"),
 ];

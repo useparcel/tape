@@ -6,6 +6,7 @@ module.exports = {
     "!**/node_modules/**",
     "!**/bundle.js",
     "!**/cheerio-bundle.js",
+    "!**/dist/**",
   ],
   moduleNameMapper: {
     "(@useparcel/.*)": "$1/index.js",

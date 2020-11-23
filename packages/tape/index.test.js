@@ -834,24 +834,26 @@ describe("plugin system", () => {
 
     const manager = tape.dev();
 
-    manager.on("ready", () => {
-      tape.update({
-        files: {
-          "/reset.css": {
-            content: `updated`,
-          },
-        },
-      });
-    });
-
     manager.on("update", (updatedIds) => {
       expect(updatedIds).toHaveLength(1);
     });
 
+    let first = true;
     manager.on("end", async () => {
-      expect(onChange).toHaveBeenCalledTimes(4);
-      await manager.close();
-      done();
+      if (first) {
+        first = false;
+        tape.update({
+          files: {
+            "/reset.css": {
+              content: `updated`,
+            },
+          },
+        });
+      } else {
+        expect(onChange).toHaveBeenCalledTimes(4);
+        await manager.close();
+        done();
+      }
     });
   });
 });
