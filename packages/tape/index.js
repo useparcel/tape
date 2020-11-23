@@ -534,10 +534,7 @@ class Tape {
       /**
        * update the asset we are transforming
        */
-      transformingAsset = {
-        ...transformedAsset,
-        ext: get(plugin, "resolve.output", asset.ext),
-      };
+      transformingAsset = { ...transformedAsset };
 
       /**
        * if the asset changed types, retransform it
@@ -606,7 +603,9 @@ class Tape {
    */
   async #writeAsset({ asset, ...props }) {
     // we add a default write plugin so we always have one
-    let plugin = this.plugins.find((plugin) => isFunction(plugin.write));
+    let plugin = this.plugins.find((plugin) =>
+      shouldRunPlugin(plugin, "write", asset.ext)
+    );
 
     return await this.#runPlugin(plugin, "write", { asset, ...props });
   }
@@ -760,7 +759,7 @@ function cacheNamespace(cache, namespace) {
  * Checked if the plugin should run for the given method and extention
  */
 function shouldRunPlugin(plugin, method, ext) {
-  const exts = forceArray(get(plugin, "resolve.input"));
+  const exts = forceArray(get(plugin, "exts"));
 
   if (!isFunction(get(plugin, method))) {
     return false;

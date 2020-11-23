@@ -6,7 +6,7 @@ import addEmbeddedDependencies from "./embedded";
 export default function () {
   return {
     name: "@useparcel/tape-html",
-    resolve: { input: ".html", output: ".html" },
+    exts: [".html"],
     async transform({ asset, addDependency }) {
       const content = new MagicString(asset.content);
       addExternalDependencies({ asset, addDependency, content });

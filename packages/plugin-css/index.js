@@ -6,7 +6,7 @@ const VALUE_URL_REGEX = /[:,].*?(?:url\()['"]?(.*?)['"]?\)/g;
 export default function () {
   return {
     name: "@useparcel/tape-css",
-    resolve: { input: [".css"], output: ".css" },
+    exts: [".css"],
     async transform({ asset, addDependency }) {
       let match;
       while ((match = IMPORT_REGEX.exec(asset.content))) {

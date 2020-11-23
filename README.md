@@ -281,7 +281,7 @@ Plugins can hook into each step of the lifecycle.
 Each plugin is a function that accepts a config object and returns an object with the following plugin structure:
 
 * name (`String` | `required`) - The unique name of the plugin.
-* exts (`String|Array` | `optional`) - An array of extensions or a single extension that the plugin should be run against. 
+* exts (`Array` | `optional`) - An array of extensions that the plugin should be run against. 
 * transform (`Function` | `optional`)
 * resolve (`Function` | `optional`)
 * optimize (`Function` | `optional`)

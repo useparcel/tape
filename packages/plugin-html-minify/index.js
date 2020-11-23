@@ -9,11 +9,8 @@ export default function (config) {
 
   return {
     name: "@useparcel/tape-html-minify",
+    exts: [".html"],
     async optimize({ asset }) {
-      if (asset.ext !== ".html") {
-        return asset;
-      }
-
       let processedContent = asset.content;
 
       /**

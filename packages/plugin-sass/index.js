@@ -33,7 +33,7 @@ const handler = (cb) => (err, result) => {
 export default function () {
   return {
     name: "@useparcel/tape-sass",
-    resolve: { input: [".scss", ".sass"], output: ".css" },
+    exts: [".scss", ".sass"],
     transform({ asset, report }) {
       return new Promise((resolve, reject) => {
         compile(asset.content, (error, content) => {
@@ -43,6 +43,7 @@ export default function () {
 
           return resolve({
             ...asset,
+            ext: ".css",
             content,
           });
         });

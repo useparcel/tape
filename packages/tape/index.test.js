@@ -597,7 +597,7 @@ describe("plugin system", () => {
     const transform1 = jest.fn(({ asset }) => asset);
     const transformPlugin1 = () => ({
       name: "transformPlugin1",
-      resolve: { input: [".txt"], output: ".txt" },
+      exts: [".txt"],
       transform: transform1,
     });
 
@@ -605,7 +605,7 @@ describe("plugin system", () => {
     const transform2 = jest.fn(({ asset }) => asset);
     const transformPlugin2 = () => ({
       name: "transformPlugin2",
-      resolve: { input: [".html"], output: ".html" },
+      exts: [".html"],
       transform: transform2,
     });
 
@@ -642,7 +642,7 @@ describe("plugin system", () => {
     expect(transform3).toHaveBeenCalledTimes(3);
   });
 
-  test("[build] runs just the first package plugin (no resolve)", async () => {
+  test("[build] runs just the first package plugin (no exts)", async () => {
     const package1 = jest.fn(({ asset }) => asset);
     const packagePlugin1 = () => ({
       name: "packagePlugin1",
@@ -673,18 +673,18 @@ describe("plugin system", () => {
     expect(package2).toHaveBeenCalledTimes(0);
   });
 
-  test("[build] runs just the first package plugin (with resolve)", async () => {
+  test("[build] runs just the first package plugin (with exts)", async () => {
     const package1 = jest.fn(({ asset }) => asset);
     const packagePlugin1 = () => ({
       name: "packagePlugin1",
-      resolve: { input: [".txt"], output: ".txt" },
+      exts: [".txt"],
       package: package1,
     });
 
     const package2 = jest.fn(({ asset }) => asset);
     const packagePlugin2 = () => ({
       name: "packagePlugin2",
-      resolve: { input: [".another-ext"], output: ".another-ext" },
+      exts: [".another-ext"],
       package: package2,
     });
 
@@ -717,7 +717,7 @@ describe("plugin system", () => {
     const optimizer2 = jest.fn(({ asset }) => asset);
     const optimizerPlugin2 = () => ({
       name: "optimizerPlugin2",
-      resolve: { input: [".css"], output: ".css" },
+      exts: [".css"],
       optimize: optimizer2,
     });
 

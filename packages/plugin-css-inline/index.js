@@ -21,9 +21,8 @@ import juice from "juice/index.js";
 export default function (config) {
   return {
     name: "@useparcel/tape-css-inline",
+    exts: [".html"],
     async optimize({ asset }) {
-      if (asset.ext !== ".html") return asset;
-
       return {
         ...asset,
         content: juice(asset.content, config),
