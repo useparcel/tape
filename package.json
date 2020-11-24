@@ -7,7 +7,8 @@
     "dev": "npx webpack --mode development --watch",
     "build": "npx webpack --mode production",
     "test": "jest",
-    "playground": "npx parcel playground/index.html -d playground/dist/"
+    "playground": "npx parcel playground/index.html -d playground/dist/",
+    "release": "lerna publish"
   },
   "devDependencies": {
     "@babel/core": "^7.12.3",
