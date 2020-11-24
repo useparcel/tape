@@ -2,8 +2,11 @@
 
 HTML build tool that runs entirely in the browser 🎁
 
+[![codecov](https://codecov.io/gh/useparcel/tape/branch/main/graph/badge.svg)](https://codecov.io/gh/useparcel/tape)
+[![npm package](https://img.shields.io/npm/v/@useparcel/tape.svg)](https://www.npmjs.com/package/@useparcel/tape)
+[![Twitter Follow](https://img.shields.io/twitter/follow/useparcel.svg?style=social)](https://twitter.com/useparcel)
 
-## Key Features
+##  Features
 * Works with a lightweight file interface
 * Discovers and compiles dependencies
 * Rebuilds the minimum number of files on updates
