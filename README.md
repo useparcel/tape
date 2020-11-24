@@ -113,7 +113,7 @@ const plugins = [
 
 ### Methods
 
-#### build() => Promise<Object>
+#### build() => Promise
 
 Starting with `entry`, this builds and returns the files. 
 
