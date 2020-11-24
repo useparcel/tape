@@ -8,7 +8,7 @@
     "build": "npx webpack --mode production",
     "test": "jest",
     "playground": "npx parcel playground/index.html -d playground/dist/",
-    "release": "lerna publish"
+    "release": "npm run test && lerna publish"
   },
   "devDependencies": {
     "@babel/core": "^7.12.3",
