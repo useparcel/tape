@@ -642,7 +642,7 @@ describe("plugin system", () => {
     expect(transform3).toHaveBeenCalledTimes(3);
   });
 
-  test("[build] runs just the first package plugin (no exts)", async () => {
+  test("[build] runs all package plugins (no exts)", async () => {
     const package1 = jest.fn(({ asset }) => asset);
     const packagePlugin1 = () => ({
       name: "packagePlugin1",
@@ -669,8 +669,8 @@ describe("plugin system", () => {
     });
     await tape.build();
 
-    expect(package1).toHaveBeenCalled();
-    expect(package2).toHaveBeenCalledTimes(0);
+    expect(package1).toHaveBeenCalledTimes(2);
+    expect(package2).toHaveBeenCalledTimes(2);
   });
 
   test("[build] runs just the first package plugin (with exts)", async () => {
@@ -684,7 +684,6 @@ describe("plugin system", () => {
     const package2 = jest.fn(({ asset }) => asset);
     const packagePlugin2 = () => ({
       name: "packagePlugin2",
-      exts: [".another-ext"],
       package: package2,
     });
 
@@ -702,8 +701,8 @@ describe("plugin system", () => {
     });
     await tape.build();
 
-    expect(package1).toHaveBeenCalled();
-    expect(package2).toHaveBeenCalledTimes(0);
+    expect(package1).toHaveBeenCalledTimes(1);
+    expect(package2).toHaveBeenCalledTimes(2);
   });
 
   test("[build] runs all optimizer functions", async () => {

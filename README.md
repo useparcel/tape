@@ -262,15 +262,15 @@ manager.on('end', ({ entry, files, diagnostics, startedAt, endedAt, isLatest }) 
 Each build goes through the following lifecycle:
 
 * Transforming
-* Resolving
+* Packaging
 * Optimizing
 * Writing
 
 During the **transforming** step, all assets are loaded, converted into usable types (i.e. MJML converted HTML), and added to a dependency graph. Inline assets such as CSS in `<style/>` tag are extracted here.
 
-Next, dependencies are **resolved**. Here inline assets are re-inserted and dependency references are replaced with their final output path.
+Next, dependencies are **packaging**. Here inline assets are re-inserted and dependency references are replaced with their final output path.
 
-After each file is resolved, it can be **optimized**. This can be any modification of the final content from HTML minification to CSS inlining.
+After each file is packaged, it can be **optimized**. This can be any modification of the final content from HTML minification to CSS inlining.
 
 Lastly, the files are **written** to some output. For example: a target output could be the file system, an in-memory object, a [series of object URLs](https://developer.mozilla.org/en-US/docs/Web/API/URL/createObjectURL).
 
@@ -283,7 +283,7 @@ Each plugin is a function that accepts a config object and returns an object wit
 * name (`String` | `required`) - The unique name of the plugin.
 * exts (`Array` | `optional`) - An array of extensions that the plugin should be run against. 
 * transform (`Function` | `optional`)
-* resolve (`Function` | `optional`)
+* package (`Function` | `optional`)
 * optimize (`Function` | `optional`)
 * write (`Function` | `optional`)
 * onChange (`Function` | `optional`)
@@ -419,17 +419,17 @@ function pugPlugin() {
 }
 ```
 
-#### `resolve({ asset, resolveAsset, getAssetContent, env, report, cache })`
+#### `package({ asset, resolveAsset, getAssetContent, env, report, cache })`
 
-After all transformations are done, `resolve` should reinsert the processed embedded assets and replace the original references to dependencies.
+After all transformations are done, `package` should reinsert the processed embedded assets and replace the original references to dependencies.
 
-Odds are you should not be using this method since HTML and CSS are already resolved.
+Odds are you should not be using this method since HTML and CSS are already packaged.
 
 For an example, check out the [HTML plugin](https://github.com/useparcel/tape/blob/main/packages/plugin-html/index.js#L23).
 
 #### `optimize({ asset, resolveAsset, getAssetContent, env, report, cache })`
 
-`optimize` is similar to transformer in that it arbitrarily modifies the file contents however it runs after paths have already been resolved, right before the file is written.
+`optimize` is similar to transformer in that it arbitrarily modifies the file contents however it runs after paths have already been packaged, right before the file is written.
 
 This step is where you can run the final code through a last optimization process.
 

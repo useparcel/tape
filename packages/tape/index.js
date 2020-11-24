@@ -186,7 +186,7 @@ class Tape {
               })
             );
 
-            // TODO: avoid having to retransform dependents - we should only repackage them not retransform them
+            // TODO: avoid having to retransform dependents - we should only re-resolve them not retransform them
 
             // clean up cache
             context.graph.removeNode(id);
@@ -568,15 +568,20 @@ class Tape {
    * This is where final dependency urls should be inserted
    */
   async #packageAsset({ asset, ...props }) {
-    const plugin = this.plugins.find((plugin) =>
+    let packagingAsset = { ...asset };
+
+    const plugins = this.plugins.filter((plugin) =>
       shouldRunPlugin(plugin, "package", asset.ext)
     );
 
-    if (!plugin) {
-      return asset;
+    for (let plugin of plugins) {
+      packagingAsset = await this.#runPlugin(plugin, "package", {
+        asset: packagingAsset,
+        ...props,
+      });
     }
 
-    return await this.#runPlugin(plugin, "package", { asset, ...props });
+    return packagingAsset;
   }
 
   /**
