@@ -7,7 +7,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@master
       - name: Install dependencies
-        run: npm install
+        run: npm run bootstrap
       - name: Run tests and collect coverage
         run: npm test
       - name: Upload coverage to Codecov
