@@ -12,6 +12,11 @@ HTML build tool that runs entirely in the browser 🎁
 * Rebuilds the minimum number of files on updates
 * Runs in the browser and server
 
+## Install
+
+```
+$ npm install @useparcel/tape
+```
 
 ## Example
 
@@ -56,7 +61,7 @@ const tape = new Tape({
 const results = await tape.build()
 
 // run tape in development mode
-const manager = await tape.dev()
+const manager = tape.dev()
 
 // when a new build starts
 manager.on('start', ({ startedAt }) => {
