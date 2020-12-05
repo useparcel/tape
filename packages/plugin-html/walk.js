@@ -84,14 +84,10 @@ function getAttributeOffsets(raw, key, value, baseIndex = 0) {
         lookingFor = "value";
         i++;
         continue;
-      }
-
-      if (value === "") {
+      } else {
         offset.end = baseIndex + i + value.length - 1;
         break;
       }
-
-      throw new Error(`Expected "=", found ${raw.charAt(i)}`);
     }
 
     // find value

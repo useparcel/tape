@@ -15,8 +15,8 @@ const urlWrite = () => ({
   name: "url-write",
   write({ asset, cache }) {
     if (asset.isEntry) {
-      return `${asset.path.replace(
-        new RegExp(`${asset.originalExt}$`),
+      return `${asset.source.path.replace(
+        new RegExp(`${asset.source.ext}$`),
         asset.ext
       )}`;
     }
