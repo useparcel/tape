@@ -31,6 +31,8 @@ class Tape {
   #cache = new Map();
   #emitter = mitt();
   #idToPathMap = {};
+  pendingUpdates = [];
+  isCompiling = false;
 
   constructor({ plugins = [], entry, files } = {}) {
     if (!entry) {
@@ -54,51 +56,57 @@ class Tape {
       mapValues(cloneDeep(files), this.#fileDefaults.bind(this)),
       "id"
     );
+
+    this.#emitter.on(
+      "processPendingUpdates",
+      this.#processPendingUpdates.bind(this)
+    );
   }
 
-  update({ entry, plugins, files = {} } = {}) {
+  #processPendingUpdates() {
     let updatedIds = [];
 
-    if (entry && entry !== this.entry) {
-      validatePath(entry);
-      this.entry = entry;
-      updatedIds.push(this.#pathToId(entry));
+    for (let { entry, plugins, files } of this.pendingUpdates) {
+      if (entry && entry !== this.entry) {
+        this.entry = entry;
+        updatedIds.push(this.#pathToId(entry));
+      }
+
+      if (plugins) {
+        this.plugins = loadPlugins(plugins);
+
+        const context = this.#cache.get("context");
+        // Mark everything as updated if we change plugins
+        if (context) {
+          updatedIds.push(...context.graph.overallOrder());
+        }
+      }
+
+      for (const [path, file] of Object.entries(files)) {
+        const id = this.#pathToId(path);
+        // new file
+        if (!has(this.files, id)) {
+          this.files[id] = this.#fileDefaults(file, path);
+          updatedIds.push(id);
+        }
+        // delete file
+        else if (isFalsy(file)) {
+          delete this.files[id];
+          updatedIds.push(id);
+        }
+        // update file
+        else if (file.content !== this.files[id].content) {
+          this.files[id].content = file.content;
+          updatedIds.push(id);
+        }
+        // no change
+        else {
+          // do nothing
+        }
+      }
     }
 
-    if (plugins) {
-      this.plugins = loadPlugins(plugins);
-
-      const context = this.#cache.get("context");
-      // Mark everything as updated if we change plugins
-      if (context) {
-        updatedIds.push(...context.graph.overallOrder());
-      }
-    }
-
-    for (const [path, file] of Object.entries(files)) {
-      validatePath(path);
-      validateGivenFile(file);
-      const id = this.#pathToId(path);
-      // new file
-      if (!has(this.files, id)) {
-        this.files[id] = this.#fileDefaults(file, path);
-        updatedIds.push(id);
-      }
-      // delete file
-      else if (isFalsy(file)) {
-        delete this.files[id];
-        updatedIds.push(id);
-      }
-      // update file
-      else if (file.content !== this.files[id].content) {
-        this.files[id].content = file.content;
-        updatedIds.push(id);
-      }
-      // no change
-      else {
-        // do nothing
-      }
-    }
+    this.pendingUpdates = [];
 
     /**
      * no updates, so skip the event
@@ -110,8 +118,30 @@ class Tape {
     this.#emitter.emit("update", updatedIds);
   }
 
+  update({ entry, plugins, files = {} } = {}) {
+    if (entry && entry !== this.entry) {
+      validatePath(entry);
+    }
+
+    if (plugins) {
+      // TODO: validate plugins here (not in `loadPlugins`)
+    }
+
+    for (const [path, file] of Object.entries(files)) {
+      validatePath(path);
+      validateGivenFile(file);
+    }
+
+    this.pendingUpdates.push({ entry, plugins, files });
+
+    if (this.isCompiling === false) {
+      this.#emitter.emit("processPendingUpdates");
+    }
+  }
+
   async build() {
     const context = { env: "production" };
+    this.isCompiling = true;
     const results = await this.#compile(context);
 
     const report = generateReporter();
@@ -119,6 +149,9 @@ class Tape {
       ...context,
       report,
     });
+
+    this.isCompiling = false;
+    this.#emitter.emit("processPendingUpdates");
 
     return pick(
       {
@@ -137,6 +170,7 @@ class Tape {
     const onChangeAsset = this.#onChangeAsset.bind(this);
     const idToPath = this.#idToPath.bind(this);
     const pathToId = this.#pathToId.bind(this);
+    const instance = this;
 
     /**
      * Triggers a compliation using cache
@@ -150,6 +184,7 @@ class Tape {
     ) {
       updatedIds = [...updatedIds];
       const startedAt = Date.now();
+      instance.isCompiling = true;
       emitter.emit(start, { startedAt });
 
       const context = cache.get("context");
@@ -230,10 +265,12 @@ class Tape {
           error,
         });
       }
+
+      instance.isCompiling = false;
+      emitter.emit("processPendingUpdates");
     }
 
     const onUpdate = (updatedIds) => triggerCompile(updatedIds);
-
     emitter.on("update", onUpdate);
 
     /**
