@@ -369,7 +369,7 @@ describe("dev", () => {
 
     const manager = tape.dev();
 
-    manager.on("ready", ({ startedAt, endedAt, ...results }) => {
+    manager.once("end", ({ startedAt, endedAt, ...results }) => {
       expect(results).toMatchSnapshot();
       expect(transform).toHaveBeenCalledTimes(4);
       transform.mockClear();
@@ -396,24 +396,69 @@ describe("dev", () => {
           },
         },
       });
-    });
 
-    /**
-     * From the update triggered above, we should only retransform 4 out
-     * of the 5 assets:
-     * - style.css - the file we updated
-     * - new.css - the file we created
-     * - index.html - the file that depends on style.css
-     * - style tag  in index.html - all embedded documents should be processed
-     */
-    manager.on("end", async ({ startedAt, endedAt, ...results }) => {
-      expect(results).toMatchSnapshot();
-      expect(transform).toHaveBeenCalledTimes(4);
-      await manager.close();
-      done();
+      /**
+       * From the update triggered above, we should only retransform 4 out
+       * of the 5 assets:
+       * - style.css - the file we updated
+       * - new.css - the file we created
+       * - index.html - the file that depends on style.css
+       * - style tag  in index.html - all embedded documents should be processed
+       */
+      manager.once("end", async ({ startedAt, endedAt, ...results }) => {
+        expect(results).toMatchSnapshot();
+        expect(transform).toHaveBeenCalledTimes(4);
+        await manager.close();
+        done();
+      });
     });
 
     manager.on("error", console.log);
+  });
+
+  test("should succeed, then throw an error, then succeed again", (done) => {
+    const transform = jest.fn(({ asset }) => {
+      if (asset.source.path.includes("error")) {
+        throw new Error("failed!");
+      }
+      return asset;
+    });
+    const transformerPlugin = () => ({
+      name: "transformerPlugin",
+      transform: transform,
+    });
+
+    const config = {
+      entry: "/succeed1.html",
+      plugins: [transformerPlugin],
+      files: {
+        "/succeed1.html": { content: `succeed` },
+        "/error.html": { content: `error` },
+        "/succeed2.html": { content: `succeed` },
+      },
+    };
+
+    const tape = new Tape(config);
+
+    const manager = tape.dev();
+
+    manager.once("end", () => {
+      expect(transform).toHaveBeenCalledTimes(1);
+      transform.mockClear();
+      tape.update({ entry: "/error.html" });
+
+      manager.once("error", () => {
+        expect(transform).toHaveBeenCalledTimes(1);
+        transform.mockClear();
+
+        tape.update({ entry: "/succeed2.html" });
+
+        manager.once("end", () => {
+          expect(transform).toHaveBeenCalledTimes(1);
+          done();
+        });
+      });
+    });
   });
 
   // TODO: test out of order results

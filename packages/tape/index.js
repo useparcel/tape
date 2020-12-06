@@ -262,6 +262,20 @@ class Tape {
         this._listeners.push({ event, func });
         emitter.on(event, func);
       },
+      once(event, func) {
+        const manager = this;
+        function handler(...args) {
+          // remove the handler
+          emitter.off(event, handler);
+          manager._listeners = manager._listeners.filter((l) => {
+            return l.func !== handler;
+          });
+
+          func(...args);
+        }
+
+        manager.on(event, handler);
+      },
     };
   }
 
@@ -426,8 +440,12 @@ class Tape {
     /********************************
      * Package, optimize, and write
      *******************************/
+    const entryDependencies = [entryId, ...graph.dependenciesOf(entryId)];
+    const entryGraphOverallOrder = graph
+      .overallOrder()
+      .filter((id) => entryDependencies.includes(id));
 
-    for (let id of graph.overallOrder()) {
+    for (let id of entryGraphOverallOrder) {
       /**
        * The asset was referenced but didn't exist. It was blocking
        * the transform. Now the reference was removed, so we can remove
