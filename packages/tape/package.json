@@ -1,6 +1,6 @@
 {
   "name": "@useparcel/tape",
-  "version": "0.2.1",
+  "version": "0.2.0",
   "description": "A browser-based HTML build tool",
   "main": "dist/index.js",
   "author": "Avi Goldman <avi@useparcel.com>",
