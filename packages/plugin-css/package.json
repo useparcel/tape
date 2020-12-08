@@ -1,6 +1,6 @@
 {
   "name": "@useparcel/tape-css",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "main": "dist/index.js",
   "author": "Avi Goldman <avi@useparcel.com>",
   "license": "MIT",
