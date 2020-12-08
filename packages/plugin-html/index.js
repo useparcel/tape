@@ -3,13 +3,25 @@ import walk from "./walk";
 import addExternalDependencies from "./external";
 import addEmbeddedDependencies from "./embedded";
 
-export default function () {
+export default function ({ ignoreMissingAssets = false } = {}) {
   return {
     name: "@useparcel/tape-html",
     exts: [".html"],
-    async transform({ asset, addDependency }) {
+    async transform({ asset, addDependency, getAssetContent }) {
+      const assetExists = (...args) => {
+        if (ignoreMissingAssets === false) {
+          return true;
+        }
+
+        try {
+          getAssetContent(...args);
+          return true;
+        } catch (e) {
+          return false;
+        }
+      };
       const content = new MagicString(asset.content);
-      addExternalDependencies({ asset, addDependency, content });
+      addExternalDependencies({ asset, addDependency, assetExists, content });
       const parts = addEmbeddedDependencies({ asset, addDependency, content });
 
       return [

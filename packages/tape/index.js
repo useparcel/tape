@@ -338,7 +338,13 @@ class Tape {
       return resolveMap[id];
     }
 
-    function getAssetContent({ id, path, dir }) {
+    function getSourceAssetContent({ id, path, dir }) {
+      id = id || pathToId(path, dir);
+
+      return this.files[id].content;
+    }
+
+    function getPackagedAssetContent({ id, path, dir }) {
       id = id || pathToId(path, dir);
 
       return packagedAssets[id].content;
@@ -346,8 +352,8 @@ class Tape {
 
     const report = generateReporter();
 
-    const generateAssetContext = (asset, context) => {
-      return pick(
+    const generateAssetContext = (asset, fields) => {
+      const context = pick(
         {
           asset,
           env,
@@ -355,8 +361,10 @@ class Tape {
             addDependency({ asset, id, path, dir: asset.source.dir }),
           resolveAsset: ({ id, path }) =>
             resolveAsset({ id, path, dir: asset.source.dir }),
-          getAssetContent: ({ id, path }) =>
-            getAssetContent({ id, path, dir: asset.source.dir }),
+          getSourceAssetContent: ({ id, path }) =>
+            getSourceAssetContent({ id, path, dir: asset.source.dir }),
+          getPackagedAssetContent: ({ id, path }) =>
+            getPackagedAssetContent({ id, path, dir: asset.source.dir }),
           report: (diagnostic) => {
             report({
               ...diagnostic,
@@ -364,8 +372,24 @@ class Tape {
             });
           },
         },
-        ["asset", "env", "report", ...context]
+        ["asset", "env", "report", ...fields]
       );
+
+      /**
+       * Alias `getSourceAssetContent` or `getPackagedAssetContent` to
+       * `getAssetContent``
+       */
+      if (context.getSourceAssetContent) {
+        context.getAssetContent = context.getSourceAssetContent;
+        delete context.getSourceAssetContent;
+      }
+
+      if (context.getPackagedAssetContent) {
+        context.getAssetContent = context.getPackagedAssetContent;
+        delete context.getPackagedAssetContent;
+      }
+
+      return context;
     };
 
     /********************************
@@ -472,12 +496,12 @@ class Tape {
       }
 
       packagedAssets[id] = await this.#packageAsset(
-        generateAssetContext(asset, ["resolveAsset", "getAssetContent"])
+        generateAssetContext(asset, ["resolveAsset", "getPackagedAssetContent"])
       );
       packagedAssets[id] = await this.#optimizeAsset(
         generateAssetContext(packagedAssets[id], [
           "resolveAsset",
-          "getAssetContent",
+          "getPackagedAssetContent",
         ])
       );
 
@@ -485,7 +509,7 @@ class Tape {
         resolveMap[id] = await this.#writeAsset(
           generateAssetContext(packagedAssets[id], [
             "resolveAsset",
-            "getAssetContent",
+            "getPackagedAssetContent",
           ])
         );
       }
@@ -822,7 +846,7 @@ function variablePreview(v) {
  * Set default plugins
  */
 function loadPlugins(pluginLoaders) {
-  pluginLoaders = [HTMLPlugin, CSSPlugin, ...pluginLoaders];
+  pluginLoaders = [...pluginLoaders];
 
   let plugins = [];
   for (let input of pluginLoaders) {
@@ -869,6 +893,12 @@ function loadPlugins(pluginLoaders) {
   }
 
   return [
+    ...(plugins.find(({ name }) => name === "@useparcel/tape-html")
+      ? []
+      : [HTMLPlugin()]),
+    ...(plugins.find(({ name }) => name === "@useparcel/tape-css")
+      ? []
+      : [CSSPlugin()]),
     ...plugins,
     ...(plugins.find(({ write }) => isFunction(write)) ? [] : [WritePlugin]),
   ];

@@ -50,7 +50,7 @@ function getAttributeOffsets(raw, key, value, baseIndex = 0) {
   let i = 0;
   const offset = {
     start: null,
-    stop: null,
+    end: null,
     key: {
       start: null,
       end: null,

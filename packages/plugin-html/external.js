@@ -62,7 +62,7 @@ const META = {
   ],
 };
 
-export default ({ asset, addDependency, content }) => {
+export default ({ asset, addDependency, assetExists, content }) => {
   let urlDependencyIndexes = [];
   walk(asset.content, (node) => {
     const { tag, attrs } = node;
@@ -97,15 +97,21 @@ export default ({ asset, addDependency, content }) => {
         continue;
       }
 
+      // check for empty values
+      if (attrs[attr].value.trim().length === 0) {
+        continue;
+      }
+
       if (isAbsoluteUrl(attrs[attr].value)) {
         continue;
       }
 
       let elements = ATTRS[attr];
-      if (elements && elements.includes(node.tag)) {
-        addDependency({ path: attrs[attr].value });
+      const path = attrs[attr].value.trim();
+
+      if (elements && elements.includes(node.tag) && assetExists({ path })) {
+        addDependency({ path });
         urlDependencyIndexes.push(attrs[attr].offset.value.end + 1);
-        // urlDependencyIndexes.push(node.startIndex + node.raw.toLowerCase().indexOf(attrs[attr].toLowerCase())) + attrs[attr].length
         return false;
       }
     }

@@ -3,22 +3,35 @@ import isAbsoluteUrl from "is-absolute-url";
 const IMPORT_REGEX = /\@import\s*(?:url\()?['"](.*?)['"]\)?/g;
 const VALUE_URL_REGEX = /[:,].*?(?:url\()['"]?(.*?)['"]?\)/g;
 
-export default function () {
+export default function ({ ignoreMissingAssets = false } = {}) {
   return {
     name: "@useparcel/tape-css",
     exts: [".css"],
-    async transform({ asset, addDependency }) {
+    async transform({ asset, addDependency, getAssetContent }) {
+      const assetExists = (...args) => {
+        if (ignoreMissingAssets === false) {
+          return true;
+        }
+
+        try {
+          getAssetContent(...args);
+          return true;
+        } catch (e) {
+          return false;
+        }
+      };
+
       let match;
       while ((match = IMPORT_REGEX.exec(asset.content))) {
         const path = match[1];
-        if (!isAbsoluteUrl(path)) {
+        if (!isAbsoluteUrl(path) && assetExists({ path })) {
           addDependency({ path });
         }
       }
 
       while ((match = VALUE_URL_REGEX.exec(asset.content))) {
         const path = match[1];
-        if (!isAbsoluteUrl(path)) {
+        if (!isAbsoluteUrl(path) && assetExists({ path })) {
           addDependency({ path });
         }
       }
