@@ -1,5 +1,17 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`html plugin can ignore missing assets 1`] = `
+Object {
+  "diagnostics": Array [],
+  "entry": "/index.html",
+  "files": Object {
+    "/index.html": Object {
+      "content": "<img src=\\"my-missing-image.png\\" />",
+    },
+  },
+}
+`;
+
 exports[`html plugin should not collect empty \`src\` attributes as assets 1`] = `
 Object {
   "diagnostics": Array [],

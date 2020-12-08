@@ -1,4 +1,5 @@
 import Tape from "../tape/index.js";
+import CSSPlugin from "./index.js";
 
 describe("CSSPlugin", () => {
   test("should gather imported urls as dependencies", async () => {
@@ -156,6 +157,22 @@ describe("CSSPlugin", () => {
       },
     });
 
+    const results = await tape.build();
+    expect(results).toMatchSnapshot();
+  });
+
+  test("can ignore missing assets", async () => {
+    const config = {
+      entry: "/index.css",
+      files: {
+        "/index.css": {
+          content: `@import 'missing-file.css'`,
+        },
+      },
+      plugins: [[CSSPlugin, { ignoreMissingAssets: true }]],
+    };
+
+    const tape = new Tape(config);
     const results = await tape.build();
     expect(results).toMatchSnapshot();
   });

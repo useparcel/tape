@@ -1,5 +1,17 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`CSSPlugin can ignore missing assets 1`] = `
+Object {
+  "diagnostics": Array [],
+  "entry": "/index.css",
+  "files": Object {
+    "/index.css": Object {
+      "content": "@import 'missing-file.css'",
+    },
+  },
+}
+`;
+
 exports[`CSSPlugin should for work for this complex example of all the things 1`] = `
 Object {
   "diagnostics": Array [],

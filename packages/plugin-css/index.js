@@ -46,7 +46,10 @@ export default function ({ ignoreMissingAssets = false } = {}) {
         if (!isAbsoluteUrl(path)) {
           const startIndex = match.index + match[0].indexOf(path);
           const endIndex = startIndex + path.length;
-          content.overwrite(startIndex, endIndex, resolveAsset({ path }));
+          const replacement = resolveAsset({ path });
+          if (replacement) {
+            content.overwrite(startIndex, endIndex, replacement);
+          }
         }
       }
 
@@ -55,7 +58,10 @@ export default function ({ ignoreMissingAssets = false } = {}) {
         if (!isAbsoluteUrl(path)) {
           const startIndex = match.index + match[0].indexOf(path);
           const endIndex = startIndex + path.length;
-          content.overwrite(startIndex, endIndex, resolveAsset({ path }));
+          const replacement = resolveAsset({ path });
+          if (replacement) {
+            content.overwrite(startIndex, endIndex, replacement);
+          }
         }
       }
 
