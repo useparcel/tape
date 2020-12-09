@@ -1,0 +1,23 @@
+{
+  "name": "find-html-dependencies",
+  "version": "0.0.0",
+  "main": "dist/index.js",
+  "author": "Avi Goldman <avi@useparcel.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/useparcel/tape/tree/main/packages/find-html-dependencies",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/useparcel/tape.git",
+    "directory": "packages/find-html-dependencies"
+  },
+  "description": "Finds all dependencies within an HTML string",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "codsen-parser": "^0.8.3",
+    "css-select": "^3.1.1",
+    "css-select-codsen-parser": "^0.0.0",
+    "is-absolute-url": "^3.0.3"
+  }
+}

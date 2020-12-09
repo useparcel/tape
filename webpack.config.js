@@ -59,6 +59,7 @@ const bundle = (dir) => (env, argv) => {
 
 module.exports = [
   bundle("css-select-codsen-parser"),
+  bundle("find-html-dependencies"),
   bundle("plugin-css"),
   bundle("plugin-css-inline"),
   bundle("plugin-html"),
