@@ -1,7 +1,6 @@
 import MagicString from "magic-string";
 import isAbsoluteUrl from "is-absolute-url";
-const IMPORT_REGEX = /\@import\s*(?:url\()?['"](.*?)['"]\)?/g;
-const VALUE_URL_REGEX = /[:,].*?(?:url\()['"]?(.*?)['"]?\)/g;
+import findCSSDependencies from "find-css-dependencies";
 
 export default function ({ ignoreMissingAssets = false } = {}) {
   return {
@@ -21,16 +20,9 @@ export default function ({ ignoreMissingAssets = false } = {}) {
         }
       };
 
-      let match;
-      while ((match = IMPORT_REGEX.exec(asset.content))) {
-        const path = match[1];
-        if (!isAbsoluteUrl(path) && assetExists({ path })) {
-          addDependency({ path });
-        }
-      }
+      const dependencies = findCSSDependencies(asset.content);
 
-      while ((match = VALUE_URL_REGEX.exec(asset.content))) {
-        const path = match[1];
+      for (let { path } of dependencies) {
         if (!isAbsoluteUrl(path) && assetExists({ path })) {
           addDependency({ path });
         }
@@ -40,27 +32,13 @@ export default function ({ ignoreMissingAssets = false } = {}) {
     },
     async package({ asset, resolveAsset }) {
       const content = new MagicString(asset.content);
-      let match;
-      while ((match = IMPORT_REGEX.exec(asset.content))) {
-        const path = match[1];
-        if (!isAbsoluteUrl(path)) {
-          const startIndex = match.index + match[0].indexOf(path);
-          const endIndex = startIndex + path.length;
-          const replacement = resolveAsset({ path });
-          if (replacement) {
-            content.overwrite(startIndex, endIndex, replacement);
-          }
-        }
-      }
+      const dependencies = findCSSDependencies(asset.content);
 
-      while ((match = VALUE_URL_REGEX.exec(asset.content))) {
-        const path = match[1];
+      for (let { path, range } of dependencies) {
         if (!isAbsoluteUrl(path)) {
-          const startIndex = match.index + match[0].indexOf(path);
-          const endIndex = startIndex + path.length;
           const replacement = resolveAsset({ path });
           if (replacement) {
-            content.overwrite(startIndex, endIndex, replacement);
+            content.overwrite(range[0], range[1], replacement);
           }
         }
       }

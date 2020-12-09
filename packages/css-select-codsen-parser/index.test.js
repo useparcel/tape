@@ -19,7 +19,6 @@ describe("css-select-codsen-parser", () => {
     expect(nodes).toMatchSnapshot();
 
     const node = selectOne(query, ast, { adapter });
-    console.log(node);
     expect(node).toMatchSnapshot();
   });
 });
