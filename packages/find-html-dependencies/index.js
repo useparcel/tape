@@ -124,12 +124,17 @@ export default function findHTMLDependencies(str) {
       for (let path of paths) {
         path = path.trim();
 
-        // Check for id references
+        // Check for data URIs
+        if (path.startsWith("data:")) {
+          continue;
+        }
+
+        // Check for ID references
         if (path[0] === "#") {
           continue;
         }
 
-        // check for empty paths
+        // Check for empty paths
         if (path.length === 0) {
           continue;
         }

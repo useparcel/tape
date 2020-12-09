@@ -58,9 +58,10 @@ describe("find-html-dependencies", () => {
     expect(dependencies).toEqual([{ path: "asdf.png", range: [18, 26] }]);
   });
 
-  test("skips empty attributes", () => {
+  test("skips empty attributes and data urls", () => {
     const dependencies = findHTMLDependencies(`
       <img src="" />
+      <img src="data:image/gif;base64,R0lGODlhEAAQAMQAAORHHOVSKudfOulrSOp3WOyDZu6QdvCchPGolfO0o/XBs/fNwfjZ0frl3/zy7////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAkAABAALAAAAAAQABAAAAVVICSOZGlCQAosJ6mu7fiyZeKqNKToQGDsM8hBADgUXoGAiqhSvp5QAnQKGIgUhwFUYLCVDFCrKUE1lBavAViFIDlTImbKC5Gm2hB0SlBCBMQiB0UjIQA7" />
     `);
 
     expect(dependencies).toEqual([]);

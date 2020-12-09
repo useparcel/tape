@@ -17,7 +17,6 @@
   "dependencies": {
     "codsen-parser": "^0.8.3",
     "css-select": "^3.1.1",
-    "css-select-codsen-parser": "^0.0.0",
-    "is-absolute-url": "^3.0.3"
+    "css-select-codsen-parser": "^0.0.0"
   }
 }
