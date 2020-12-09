@@ -1,0 +1,17 @@
+{
+  "name": "find-css-dependencies",
+  "version": "0.0.0",
+  "main": "dist/index.js",
+  "author": "Avi Goldman <avi@useparcel.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/useparcel/tape/tree/main/packages/find-css-dependencies",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/useparcel/tape.git",
+    "directory": "packages/find-css-dependencies"
+  },
+  "description": "Finds all dependencies within an CSS string",
+  "publishConfig": {
+    "access": "public"
+  }
+}
