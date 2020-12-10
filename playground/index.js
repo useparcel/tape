@@ -1,10 +1,10 @@
 import "regenerator-runtime/runtime";
 
 import Tape from "../packages/tape";
-// import tapeSassPlugin from '../packages/plugin-sass'
-// import tapeCSSInlinePlugin from '../packages/plugin-css-inline'
-// import tapeHTMLMinifyPlugin from '../packages/plugin-html-minify'
-// import tapeHTMLPrettifyPlugin from '../packages/plugin-html-prettify'
+import tapeSassPlugin from "../packages/plugin-sass";
+import tapeCSSInlinePlugin from "../packages/plugin-css-inline";
+import tapeHTMLMinifyPlugin from "../packages/plugin-html-minify";
+import tapeHTMLPrettifyPlugin from "../packages/plugin-html-prettify";
 
 const mimeType = {
   ".css": "text/css",
@@ -51,10 +51,10 @@ const baseFiles = {};
 const tape = new Tape({
   entry: "/index.html",
   plugins: [
-    // tapeSassPlugin.default,
-    // tapeCSSInlinePlugin.default,
-    // tapeHTMLMinifyPlugin.default,
-    // tapeHTMLPrettifyPlugin.default(),
+    tapeSassPlugin,
+    tapeCSSInlinePlugin,
+    tapeHTMLMinifyPlugin,
+    // tapeHTMLPrettifyPlugin,
     urlWrite,
   ],
   files: baseFiles,

@@ -1,4 +1,5 @@
 const webpack = require("webpack");
+const nodeExternals = require("webpack-node-externals");
 
 const bundle = (dir) => (env, argv) => {
   return {
@@ -25,16 +26,37 @@ const bundle = (dir) => (env, argv) => {
         fs: false,
       },
       alias: {
-        sass: "sass.js",
         "node-fetch": "isomorphic-fetch",
-        // We don't want the bundled version
-        // https://github.com/webpack/webpack/issues/11277
-        "@useparcel/tape-html-plugin": "@useparcel/tape-html-plugin/index.js",
-        "@useparcel/tape-css-plugin": "@useparcel/tape-css-plugin/index.js",
       },
     },
+    externals: [
+      nodeExternals(),
+      nodeExternals({
+        modulesDir: `${__dirname}/packages/${dir}/node_modules`,
+      }),
+    ],
     module: {
       rules: [
+        // Since we are using nodeExternals, webpack resolve.alias doesn't work.
+        // To get around that, we do a straight replace on the import.
+        {
+          test: /index\.js$/,
+          exclude: /(node_modules|bower_components)/,
+          loader: "string-replace-loader",
+          options: {
+            search: `from "sass"`,
+            replace: `from "sass.js"`,
+          },
+        },
+        {
+          test: /index\.js$/,
+          exclude: /(node_modules|bower_components)/,
+          loader: "string-replace-loader",
+          options: {
+            search: `from "sass"`,
+            replace: `from "sass.js"`,
+          },
+        },
         {
           test: /\.m?js$/,
           exclude: /(node_modules|bower_components)/,
@@ -60,6 +82,7 @@ const bundle = (dir) => (env, argv) => {
 module.exports = [
   bundle("css-select-codsen-parser"),
   bundle("find-css-dependencies"),
+  bundle("find-embedded-documents"),
   bundle("find-html-dependencies"),
   bundle("plugin-css"),
   bundle("plugin-css-inline"),
