@@ -1,6 +1,6 @@
 {
   "name": "@useparcel/tape-html",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "main": "dist/index.js",
   "author": "Avi Goldman <avi@useparcel.com>",
   "license": "MIT",
@@ -12,8 +12,8 @@
   },
   "dependencies": {
     "codsen-parser": "^0.8.3",
-    "find-embedded-documents": "^0.0.0",
-    "find-html-dependencies": "^0.0.0",
+    "find-embedded-documents": "^0.3.1",
+    "find-html-dependencies": "^0.3.1",
     "is-absolute-url": "^3.0.3",
     "magic-string": "^0.25.7"
   },
