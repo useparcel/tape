@@ -69,7 +69,8 @@ const tape = new Tape({
 
 const manager = tape.dev();
 manager.on("*", (event, data) => {
-  if (event === "ready" || event === "end") {
+  if (event === "end") {
+    console.log(data.files[data.entry].content);
     iframe.contentWindow.document.open();
     iframe.contentWindow.document.write(data.files[data.entry].content);
     iframe.contentWindow.document.close();

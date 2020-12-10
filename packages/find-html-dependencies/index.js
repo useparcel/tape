@@ -98,7 +98,9 @@ export default function findHTMLDependencies(str) {
         continue;
       }
 
-      const value = details.attribValueRaw;
+      const attribName = details.attribName;
+      let value = details.attribValueRaw;
+      let valueStartsAt = details.attribValueStartsAt;
 
       // Filter out a weird meta tag
       if (
@@ -134,9 +136,8 @@ export default function findHTMLDependencies(str) {
           "i"
         ).exec(node.value);
 
-        console.log(v1 || v2);
-
         value = v1 ? v1[2] : v2 ? v2[1] : null;
+        valueStartsAt = node.value.indexOf(value) + node.start;
       }
 
       // if we still don't have a value, skip it
@@ -170,7 +171,7 @@ export default function findHTMLDependencies(str) {
         }
 
         const [start, end] = getRange(value.substring(offset), path);
-        const padding = details.attribValueStartsAt + offset;
+        const padding = valueStartsAt + offset;
         dependencies.push({
           path,
           range: [start + padding, end + padding],
