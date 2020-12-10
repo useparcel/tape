@@ -1,0 +1,21 @@
+{
+  "name": "css-select-codsen-parser",
+  "version": "0.0.0",
+  "main": "dist/index.js",
+  "author": "Avi Goldman <avi@useparcel.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/useparcel/tape/tree/main/packages/css-select-codsen-parser",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/useparcel/tape.git",
+    "directory": "packages/css-select-codsen-parser"
+  },
+  "description": "An adapter for `css-select` to allow querying of `codsen-parser` generated trees.",
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "codsen-parser": "^0.8.3",
+    "css-select": "^3.1.0"
+  }
+}

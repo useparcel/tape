@@ -1,0 +1,22 @@
+{
+  "name": "find-embedded-documents",
+  "version": "0.0.0",
+  "main": "dist/index.js",
+  "author": "Avi Goldman <avi@useparcel.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/useparcel/tape/tree/main/packages/find-embedded-documents",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/useparcel/tape.git",
+    "directory": "packages/find-embedded-documents"
+  },
+  "description": "Finds all embedded CSS and JavaScript documents within an HTML string or codesen parser AST",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "codsen-parser": "^0.8.3",
+    "css-select": "^3.1.1",
+    "css-select-codsen-parser": "^0.0.0"
+  }
+}

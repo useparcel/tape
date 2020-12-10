@@ -12,6 +12,23 @@ Object {
 }
 `;
 
+exports[`html plugin should ignore whitepscape 1`] = `
+Object {
+  "diagnostics": Array [],
+  "entry": "/index.html",
+  "files": Object {
+    "/index.html": Object {
+      "content": "
+          <img src=\\"     my-image.png     \\" /> 
+        ",
+    },
+    "my-image.png": Object {
+      "content": "link to image",
+    },
+  },
+}
+`;
+
 exports[`html plugin should not collect empty \`src\` attributes as assets 1`] = `
 Object {
   "diagnostics": Array [],
@@ -22,23 +39,6 @@ Object {
           <img src=\\"\\" /> 
           <img src= >
         ",
-    },
-  },
-}
-`;
-
-exports[`html plugin should trim asset paths 1`] = `
-Object {
-  "diagnostics": Array [],
-  "entry": "/index.html",
-  "files": Object {
-    "/index.html": Object {
-      "content": "
-|tape-dependency          <img src=\\"     my-image.png     \\" /> 
-        ",
-    },
-    "my-image.png": Object {
-      "content": "link to image",
     },
   },
 }
