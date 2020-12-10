@@ -82,8 +82,8 @@ const QUERY = [
 
 export default function findHTMLDependencies(str) {
   let dependencies = [];
-  const ast = prepare(parse(str));
-  const nodes = selectAll(QUERY, ast, { adapter });
+  const ast = typeof str === "string" ? parse(str) : str;
+  const nodes = selectAll(QUERY, prepare(ast), { adapter });
 
   for (let node of nodes) {
     const tag = node.tagName;

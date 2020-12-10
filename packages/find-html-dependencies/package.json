@@ -10,7 +10,7 @@
     "url": "https://github.com/useparcel/tape.git",
     "directory": "packages/find-html-dependencies"
   },
-  "description": "Finds all dependencies within an HTML string",
+  "description": "Finds all dependencies within an HTML string or codesen parser AST",
   "publishConfig": {
     "access": "public"
   },
