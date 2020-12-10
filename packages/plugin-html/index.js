@@ -1,7 +1,8 @@
 import MagicString from "magic-string";
-import walk from "./walk";
-import addExternalDependencies from "./external";
-import addEmbeddedDependencies from "./embedded";
+import findHTMLDependencies from "find-html-dependencies";
+import findEmbeddedDocuments from "find-embedded-documents";
+import isAbsoluteUrl from "is-absolute-url";
+import parse from "codsen-parser";
 
 export default function ({ ignoreMissingAssets = false } = {}) {
   return {
@@ -21,8 +22,40 @@ export default function ({ ignoreMissingAssets = false } = {}) {
         }
       };
       const content = new MagicString(asset.content);
-      addExternalDependencies({ asset, addDependency, assetExists, content });
-      const parts = addEmbeddedDependencies({ asset, addDependency, content });
+      const ast = parse(asset.content);
+
+      /**
+       * Add external dependencies
+       */
+      const dependencies = findHTMLDependencies(ast);
+      for (let { path, range } of dependencies) {
+        if (isAbsoluteUrl(path)) {
+          continue;
+        }
+
+        if (assetExists({ path })) {
+          addDependency({ path });
+        }
+      }
+
+      /**
+       * Add embedded dependencies
+       */
+      const documents = findEmbeddedDocuments(ast);
+      let parts = [];
+      let i = 0;
+      for (let doc of documents) {
+        const id = `${asset.id}:${i}`;
+        parts.push({
+          id,
+          ext: `.${doc.type}`,
+          content: doc.content,
+          embedded: true,
+        });
+        addDependency({ id: id });
+        content.appendRight(doc.openTag.end - 1, ` data-tape-id="${id}"`);
+        i++;
+      }
 
       return [
         {
@@ -34,33 +67,35 @@ export default function ({ ignoreMissingAssets = false } = {}) {
     },
     async package({ asset, resolveAsset, getAssetContent }) {
       const content = new MagicString(asset.content);
-
-      walk(asset.content, ({ tag, attrs, content: c }) => {
-        if (!attrs) {
-          return false;
+      const ast = parse(asset.content);
+      /**
+       * Resolve external dependencies
+       */
+      const dependencies = findHTMLDependencies(ast);
+      for (let { path, range } of dependencies) {
+        const replacement = resolveAsset({ path });
+        if (replacement) {
+          content.overwrite(range[0], range[1], replacement);
         }
+      }
 
-        for (let { value, offset } of Object.values(attrs)) {
-          if (value.endsWith("|tape-dependency")) {
-            content.overwrite(
-              offset.value.start,
-              offset.value.end + 1,
-              resolveAsset({ path: value.replace(/\|tape-dependency$/, "") })
-            );
-          }
+      /**
+       * Resolve embedded dependencies
+       */
+      const documents = findEmbeddedDocuments(ast);
+      for (let doc of documents) {
+        const attribute = doc.openTag.attribs.find(
+          ({ attribName }) => attribName === "data-tape-id"
+        );
+        if (!attribute) {
+          continue;
         }
+        const id = attribute.attribValueRaw;
 
-        if (tag === "style" && attrs["data-tape-id"]) {
-          const styleContent = getAssetContent({
-            id: attrs["data-tape-id"].value,
-          });
-          content.remove(
-            attrs["data-tape-id"].offset.start - 1, // subtract one to remove the space we added
-            attrs["data-tape-id"].offset.end + 1
-          );
-          content.overwrite(c.offset.start, c.offset.end + 1, styleContent);
-        }
-      });
+        const styleContent = getAssetContent({ id });
+        content.remove(attribute.attribStarts - 1, attribute.attribEnds);
+        content.overwrite(doc.range[0], doc.range[1], styleContent);
+      }
 
       return {
         ...asset,

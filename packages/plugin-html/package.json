@@ -11,11 +11,10 @@
     "directory": "packages/plugin-html"
   },
   "dependencies": {
-    "cheerio": "^0.22.0",
+    "codsen-parser": "^0.8.3",
+    "find-embedded-documents": "^0.0.0",
+    "find-html-dependencies": "^0.0.0",
     "is-absolute-url": "^3.0.3",
-    "lodash.isfunction": "^3.0.9",
-    "lodash.mapvalues": "^4.6.0",
-    "lodash.memoize": "^4.1.2",
     "magic-string": "^0.25.7"
   },
   "publishConfig": {
