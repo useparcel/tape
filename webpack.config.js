@@ -30,9 +30,12 @@ const bundle = (dir) => (env, argv) => {
       },
     },
     externals: [
-      nodeExternals(),
+      nodeExternals({
+        allowlist: ["juice"],
+      }),
       nodeExternals({
         modulesDir: `${__dirname}/packages/${dir}/node_modules`,
+        allowlist: ["juice"],
       }),
     ],
     module: {
