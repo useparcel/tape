@@ -127,7 +127,7 @@ export default function findHTMLDependencies(str) {
       ) {
         // with quotes
         const v1 = new RegExp(
-          `${details.attribName}\\s*=\\s*(["'])((?:(\\n|.))*)\\1`,
+          `${details.attribName}\\s*=\\s*(["'])((?:(\\n|.))*?)\\1`,
           "i"
         ).exec(node.value);
         // without quotes
@@ -138,6 +138,7 @@ export default function findHTMLDependencies(str) {
 
         value = v1 ? v1[2] : v2 ? v2[1] : null;
         valueStartsAt = node.value.indexOf(value) + node.start;
+        console.log(value);
       }
 
       // if we still don't have a value, skip it
