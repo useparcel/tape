@@ -2,7 +2,6 @@ const url = require("url");
 
 /**
  * Node url resolve doesn't support blob url's by default
- * @type {[type]}
  */
 const resolve = url.resolve;
 url.resolve = (fromUrl, toUrl) => {
@@ -23,31 +22,26 @@ export default function (config) {
     name: "@useparcel/tape-css-inline",
     exts: [".html"],
     async optimize({ asset }) {
-      return {
-        ...asset,
-        content: juice(asset.content, config),
-      };
-
-      // return new Promise((resolve, reject) => {
-      //   juice.juiceResources(
-      //     asset.content,
-      //     {
-      //       webResources: {
-      //         relativeTo: asset.source.path,
-      //       },
-      //     },
-      //     (err, content) => {
-      //       if (err) {
-      //         reject(err);
-      //       } else {
-      //         resolve({
-      //           ...asset,
-      //           content,
-      //         });
-      //       }
-      //     }
-      //   );
-      // });
+      return new Promise((resolve, reject) => {
+        juice.juiceResources(
+          asset.content,
+          {
+            webResources: {
+              relativeTo: asset.source.path,
+            },
+          },
+          (err, content) => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve({
+                ...asset,
+                content,
+              });
+            }
+          }
+        );
+      });
     },
   };
 }

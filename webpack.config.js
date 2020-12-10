@@ -25,17 +25,11 @@ const bundle = (dir) => (env, argv) => {
         path: require.resolve("path-browserify"),
         fs: false,
       },
-      alias: {
-        "node-fetch": "isomorphic-fetch",
-      },
     },
     externals: [
-      nodeExternals({
-        allowlist: ["juice"],
-      }),
+      nodeExternals(),
       nodeExternals({
         modulesDir: `${__dirname}/packages/${dir}/node_modules`,
-        allowlist: ["juice"],
       }),
     ],
     module: {
@@ -52,29 +46,10 @@ const bundle = (dir) => (env, argv) => {
           },
         },
         {
-          test: /index\.js$/,
-          exclude: /(node_modules|bower_components)/,
-          loader: "string-replace-loader",
-          options: {
-            search: `from "sass"`,
-            replace: `from "sass.js"`,
-          },
-        },
-        {
           test: /\.m?js$/,
           exclude: /(node_modules|bower_components)/,
           use: {
             loader: "babel-loader",
-          },
-        },
-        // force web-resource-inliner to support blob urls
-        // https://github.com/jrit/web-resource-inliner/blob/96ab4c594746f5337fc662a19135092fb4f4b2a1/src/util.js#L46
-        {
-          test: /util\.js$/,
-          loader: "string-replace-loader",
-          options: {
-            search: `^'?https?:\\/\\/|^\\/\\/`,
-            replace: `^(?:blob:)?'?https?:\\/\\/|^\\/\\/`,
           },
         },
       ],
@@ -88,7 +63,25 @@ module.exports = [
   bundle("find-embedded-documents"),
   bundle("find-html-dependencies"),
   bundle("plugin-css"),
-  bundle("plugin-css-inline"),
+  // bundle everything for juice
+  (...args) => {
+    const config = bundle("plugin-css-inline")(...args);
+    delete config.externals;
+    config.resolve.alias = { "node-fetch": "isomorphic-fetch" };
+    config.module.rules.push(
+      // force web-resource-inliner to support blob urls
+      // https://github.com/jrit/web-resource-inliner/blob/96ab4c594746f5337fc662a19135092fb4f4b2a1/src/util.js#L46
+      {
+        test: /util\.js$/,
+        loader: "string-replace-loader",
+        options: {
+          search: `^'?https?:\\/\\/|^\\/\\/`,
+          replace: `^(?:blob:)?'?https?:\\/\\/|^\\/\\/`,
+        },
+      }
+    );
+    return config;
+  },
   bundle("plugin-html"),
   bundle("plugin-html-minify"),
   bundle("plugin-html-prettify"),
