@@ -83,6 +83,7 @@ const QUERY = [
 export default function findHTMLDependencies(str) {
   let dependencies = [];
   const ast = typeof str === "string" ? parse(str) : str;
+  const source = typeof str === "string" ? str : getRawContent(str);
   const nodes = selectAll(QUERY, prepare(ast), { adapter });
 
   for (let node of nodes) {
@@ -121,24 +122,21 @@ export default function findHTMLDependencies(str) {
        *
        * Check where we have no url and there is an unknown attribue
        */
-      if (
-        !value &&
-        node.attribs.find(({ attribNameRecognised }) => !attribNameRecognised)
-      ) {
+      if (!value) {
+        const raw = source.substring(node.start).split(">")[0];
         // with quotes
         const v1 = new RegExp(
           `${details.attribName}\\s*=\\s*(["'])((?:(\\n|.))*?)\\1`,
           "i"
-        ).exec(node.value);
+        ).exec(raw);
         // without quotes
         const v2 = new RegExp(
           `${details.attribName}\\s*=\\s*((?:(\\S))*?)(?:\\s|>|$)`,
           "i"
-        ).exec(node.value);
+        ).exec(raw);
 
         value = v1 ? v1[2] : v2 ? v2[1] : null;
-        valueStartsAt = node.value.indexOf(value) + node.start;
-        console.log(value);
+        valueStartsAt = raw.indexOf(value) + node.start;
       }
 
       // if we still don't have a value, skip it
@@ -203,4 +201,14 @@ function parseSrcSet(srcset) {
 
 function cssEscape(str) {
   return str.replace(":", "\\:");
+}
+
+function getRawContent(node) {
+  if (Array.isArray(node)) {
+    return node.map(getRawContent).join("");
+  }
+
+  return (
+    (node.value || "") + adapter.getChildren(node).map(getRawContent).join("")
+  );
 }
