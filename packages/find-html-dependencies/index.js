@@ -114,6 +114,36 @@ export default function findHTMLDependencies(str) {
         continue;
       }
 
+      /**
+       * Bug in codsen where the url ends with an equal sign (=)
+       *
+       * Check where we have no url and there is an unknown attribue
+       */
+      if (
+        !value &&
+        node.attribs.find(({ attribNameRecognised }) => !attribNameRecognised)
+      ) {
+        // with quotes
+        const v1 = new RegExp(
+          `${details.attribName}\\s*=\\s*(["'])((?:(\\n|.))*)\\1`,
+          "i"
+        ).exec(node.value);
+        // without quotes
+        const v2 = new RegExp(
+          `${details.attribName}\\s*=\\s*((?:(\\S))*?)(?:\\s|>|$)`,
+          "i"
+        ).exec(node.value);
+
+        console.log(v1 || v2);
+
+        value = v1 ? v1[2] : v2 ? v2[1] : null;
+      }
+
+      // if we still don't have a value, skip it
+      if (!value) {
+        continue;
+      }
+
       const paths =
         attr === "srcset" || attr === "imagesrcset"
           ? parseSrcSet(value)
