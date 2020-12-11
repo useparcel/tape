@@ -17,17 +17,26 @@ url.resolve = (fromUrl, toUrl) => {
  */
 import juice from "juice/index.js";
 
-export default function (config) {
+export default function (config = {}) {
   return {
     name: "@useparcel/tape-css-inline",
     exts: [".html"],
     async optimize({ asset }) {
+      if (!config.juiceResources) {
+        return {
+          ...asset,
+          content: juice(asset.content, config),
+        };
+      }
+
       return new Promise((resolve, reject) => {
         juice.juiceResources(
           asset.content,
           {
+            ...config,
             webResources: {
               relativeTo: asset.source.path,
+              ...config.webResources,
             },
           },
           (err, content) => {
