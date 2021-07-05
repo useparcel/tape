@@ -17,7 +17,7 @@ import {
   isMap,
   isPlainObject,
   isArray,
-} from "lodash"; 
+} from "lodash";
 import { DepGraph as Graph } from "dependency-graph";
 import { extname, dirname, basename, resolve as resolvePath } from "path";
 import md5 from "md5";
