@@ -1,9 +1,9 @@
-import Tape from "../tape/index.js";
+import { tape } from "../tape/index.js";
 import CSSInlinePlugin from "./index.js";
 
 describe("CSSInlinePlugin", () => {
   test("should inline the css", async () => {
-    const tape = new Tape({
+    const results = await tape({
       entry: "/index.html",
       plugins: [CSSInlinePlugin],
       files: {
@@ -30,7 +30,6 @@ describe("CSSInlinePlugin", () => {
       },
     });
 
-    const results = await tape.build();
     expect(results).toMatchSnapshot();
   });
 });

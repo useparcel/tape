@@ -118,27 +118,6 @@ class Tape {
     this.#emitter.emit("update", updatedIds);
   }
 
-  update({ entry, plugins, files = {} } = {}) {
-    if (entry && entry !== this.entry) {
-      validatePath(entry);
-    }
-
-    if (plugins) {
-      // TODO: validate plugins here (not in `loadPlugins`)
-    }
-
-    for (const [path, file] of Object.entries(files)) {
-      validatePath(path);
-      validateGivenFile(file);
-    }
-
-    this.pendingUpdates.push({ entry, plugins, files });
-
-    if (this.isCompiling === false) {
-      this.#emitter.emit("processPendingUpdates");
-    }
-  }
-
   async build() {
     const context = { env: "production" };
     this.isCompiling = true;
@@ -160,160 +139,6 @@ class Tape {
       },
       ["entry", "files", "diagnostics"]
     );
-  }
-
-  dev() {
-    const emitter = this.#emitter;
-    const cache = this.#cache;
-    const compile = this.#compile.bind(this);
-    const cleanup = this.#cleanup.bind(this);
-    const onChangeAsset = this.#onChangeAsset.bind(this);
-    const idToPath = this.#idToPath.bind(this);
-    const pathToId = this.#pathToId.bind(this);
-    const instance = this;
-
-    /**
-     * Triggers a compliation using cache
-     * @param  {Array}  updatedIds    an array of inputed files changes
-     * @param  {String} events.start  event to emit at the start
-     * @param  {String} events.end    event to emit at the end
-     */
-    async function triggerCompile(
-      updatedIds,
-      { start = "start", end = "end" } = {}
-    ) {
-      updatedIds = [...updatedIds];
-      const startedAt = Date.now();
-      instance.isCompiling = true;
-      emitter.emit(start, { startedAt });
-
-      const context = cache.get("context");
-
-      const report = generateReporter();
-
-      if (context) {
-        for (let id of updatedIds) {
-          /********************************
-           * onChange
-           *******************************/
-          if (has(context.transformedAssets, id)) {
-            onChangeAsset({
-              env: "development",
-              asset: context.transformedAssets[id],
-              report,
-            });
-          }
-
-          // remove related diagnostics
-          context.diagnostics = context.diagnostics.filter(
-            ({ path }) => pathToId(path) === id
-          );
-
-          if (context.graph.hasNode(id)) {
-            // mark all dependents and embedded assets as updated
-            updatedIds.push(
-              ...context.graph.dependantsOf(id),
-              ...context.graph.directDependenciesOf(id).filter((id) => {
-                return (
-                  context.transformedAssets[id] &&
-                  context.transformedAssets[id].embedded
-                );
-              })
-            );
-
-            // TODO: avoid having to retransform dependents - we should only re-resolve them not retransform them
-
-            // clean up cache
-            context.graph.removeNode(id);
-            keys(omit(context, "graph")).map((part) => {
-              delete context[part][id];
-            });
-          }
-        }
-
-        /**
-         * Add all the new diagonstics added by the onChange plugins
-         */
-        context.diagnostics = [...context.diagnostics, ...report.release()];
-      }
-
-      try {
-        const results = await compile({ env: "development", context });
-        /** only save newer caches */
-        const isLatest =
-          !cache.has("context") || startedAt > cache.get("context").timestamp;
-        if (isLatest) {
-          cache.set("context", {
-            timestamp: startedAt,
-            ...results.context,
-          });
-        }
-
-        const endedAt = Date.now();
-        emitter.emit(end, {
-          ...pick(results, ["entry", "files", "diagnostics"]),
-          startedAt,
-          endedAt,
-          isLatest,
-        });
-      } catch (error) {
-        const endedAt = Date.now();
-        emitter.emit("error", {
-          startedAt,
-          endedAt,
-          // TODO: isLatest
-          error,
-        });
-      }
-
-      instance.isCompiling = false;
-      emitter.emit("processPendingUpdates");
-    }
-
-    const onUpdate = (updatedIds) => triggerCompile(updatedIds);
-    emitter.on("update", onUpdate);
-
-    /**
-     * on next tick, run the build
-     *
-     * this gives the event handlers a chance to be attached
-     */
-    setTimeout(() => {
-      triggerCompile([]);
-    });
-
-    return {
-      _listeners: [],
-      async close() {
-        emitter.off("update", onUpdate);
-        this._listeners.forEach(({ event, func }) => {
-          emitter.off(event, func);
-        });
-
-        const report = generateReporter();
-        await cleanup({ env: "development", report });
-
-        return { diagnostics: report.release() };
-      },
-      on(event, func) {
-        this._listeners.push({ event, func });
-        emitter.on(event, func);
-      },
-      once(event, func) {
-        const manager = this;
-        function handler(...args) {
-          // remove the handler
-          emitter.off(event, handler);
-          manager._listeners = manager._listeners.filter((l) => {
-            return l.func !== handler;
-          });
-
-          func(...args);
-        }
-
-        manager.on(event, handler);
-      },
-    };
   }
 
   /**
@@ -774,7 +599,11 @@ class Tape {
   }
 }
 
-export default Tape;
+export function tape(config) {
+  const instance = new Tape(config);
+
+  return instance.build();
+}
 
 /**
  * Given a value, it forces it to be a compact array

@@ -1,4 +1,4 @@
-import Tape from "./index.js";
+import { tape } from "./index.js";
 
 const validConfig = {
   entry: "/index.html",
@@ -9,121 +9,112 @@ const validConfig = {
   },
 };
 
-describe("constructor", () => {
+describe("validation", () => {
   test("should work with valid config", () => {
-    expect(() => new Tape(validConfig)).toBeTruthy();
+    expect(() => tape(validConfig)).toBeTruthy();
   });
 
   describe("validation", () => {
     test("should catch missing entry", () => {
-      expect(() => new Tape()).toThrow(/entry/);
+      expect(() => tape()).toThrow(/entry/);
     });
 
     test("should catch missing files", () => {
-      expect(
-        () =>
-          new Tape({
-            entry: "/index.html",
-          })
+      expect(() =>
+        tape({
+          entry: "/index.html",
+        })
       ).toThrow(/files/);
     });
 
     test("should catch an invalid entry path", () => {
-      expect(
-        () =>
-          new Tape({
-            entry: "invalid-pat>h",
-            files: {
-              "/index.html": {
-                content: "test",
-              },
+      expect(() =>
+        tape({
+          entry: "invalid-pat>h",
+          files: {
+            "/index.html": {
+              content: "test",
             },
-          })
+          },
+        })
       ).toThrow(/invalid/);
     });
 
     test("should catch an invalid file path", () => {
-      expect(
-        () =>
-          new Tape({
-            entry: "valid-path",
-            files: {
-              "/ind*ex.html": {
-                content: "test",
-              },
+      expect(() =>
+        tape({
+          entry: "valid-path",
+          files: {
+            "/ind*ex.html": {
+              content: "test",
             },
-          })
+          },
+        })
       ).toThrow(/invalid/);
     });
 
     test("should catch a file with a bad key", () => {
-      expect(
-        () =>
-          new Tape({
-            entry: "valid-path",
-            files: {
-              "/index.html": {
-                bad: "key",
-              },
+      expect(() =>
+        tape({
+          entry: "valid-path",
+          files: {
+            "/index.html": {
+              bad: "key",
             },
-          })
+          },
+        })
       ).toThrow(/invalid/);
     });
 
     test("should allow empty files", () => {
-      expect(
-        () =>
-          new Tape({
-            entry: "valid-path",
-            files: {
-              "/index.html": {},
-              "/another.html": null,
-            },
-          })
+      expect(() =>
+        tape({
+          entry: "valid-path",
+          files: {
+            "/index.html": {},
+            "/another.html": null,
+          },
+        })
       ).toBeTruthy();
     });
 
     test("should make sure all plugins are functions", () => {
-      expect(
-        () =>
-          new Tape({
-            ...validConfig,
-            plugins: [null],
-          })
+      expect(() =>
+        tape({
+          ...validConfig,
+          plugins: [null],
+        })
       ).toThrow(/invalid plugin/i);
     });
 
     test("should make sure all plugins return objects", () => {
-      expect(
-        () =>
-          new Tape({
-            ...validConfig,
-            plugins: [() => "woops"],
-          })
+      expect(() =>
+        tape({
+          ...validConfig,
+          plugins: [() => "woops"],
+        })
       ).toThrow(/invalid plugin/i);
     });
 
     test("should make sure all plugins have names", () => {
-      expect(
-        () =>
-          new Tape({
-            ...validConfig,
-            plugins: [() => ({})],
-          })
+      expect(() =>
+        tape({
+          ...validConfig,
+          plugins: [() => ({})],
+        })
       ).toThrow(/name/);
     });
 
     test("should make sure all plugin names are unique", () => {
-      expect(
-        () =>
-          new Tape({
-            ...validConfig,
-            plugins: [
-              () => ({ name: "pluginName" }),
-              () => ({ name: "aDifferentPluginName" }),
-              () => ({ name: "pluginName" }),
-            ],
-          })
+      expect(() =>
+        tape({
+          ...validConfig,
+          plugins: [
+            () => ({ name: "pluginName" }),
+            () => ({ name: "aDifferentPluginName" }),
+            () => ({ name: "pluginName" }),
+          ],
+        })
       ).toThrow(/pluginName/);
     });
   });
@@ -131,25 +122,25 @@ describe("constructor", () => {
 
 describe("build", () => {
   test("should throw an error when entry path does not exist", async () => {
-    const tape = new Tape({
-      ...validConfig,
-      entry: "na.html",
-    });
-
-    await expect(tape.build()).rejects.toThrow(/not found/);
+    await expect(
+      tape({
+        ...validConfig,
+        entry: "na.html",
+      })
+    ).rejects.toThrow(/not found/);
   });
 
   test("should throw an error when a dependency does not exist", async () => {
-    const tape = new Tape({
-      entry: "/index.html",
-      files: {
-        "/index.html": {
-          content: '<link href="/style.css"/>',
+    await expect(
+      tape({
+        entry: "/index.html",
+        files: {
+          "/index.html": {
+            content: '<link href="/style.css"/>',
+          },
         },
-      },
-    });
-
-    await expect(tape.build()).rejects.toThrow(/not found/);
+      })
+    ).rejects.toThrow(/not found/);
   });
 
   test("should work for a complex example that includes a bunch of dependencies and embedded documents", async () => {
@@ -198,14 +189,12 @@ describe("build", () => {
       },
     };
 
-    const tape = new Tape(config);
-
-    const results = await tape.build();
+    const results = await tape(config);
 
     expect(results).toMatchSnapshot();
   });
 
-  test("should change the output when built after an update", async () => {
+  test.skip("should change the output when built after an update", async () => {
     /**
      * This config has the following important features:
      * - entry file
@@ -309,13 +298,11 @@ describe("build", () => {
       },
     };
 
-    const tape = new Tape(config);
-
-    await expect(tape.build()).rejects.toThrow(/cycle/i);
+    await expect(tape(config)).rejects.toThrow(/cycle/i);
   });
 });
 
-describe("dev", () => {
+describe.skip("dev", () => {
   test("should work for a complex example that includes a bunch of dependencies and embedded documents", (done) => {
     /**
      * This config has the following important features:
@@ -466,7 +453,7 @@ describe("dev", () => {
   // TODO: test close
 });
 
-describe("update", () => {
+describe.skip("update", () => {
   test("should trigger when creating a new file", async (done) => {
     const tape = new Tape({
       entry: "index.html",
@@ -629,7 +616,7 @@ describe("plugin system", () => {
       name: "ok-plugin",
     }));
 
-    const tape = new Tape({
+    await tape({
       ...validConfig,
       plugins: [[plugin, "config goes here"]],
     });
@@ -661,7 +648,7 @@ describe("plugin system", () => {
       transform: transform3,
     });
 
-    const tape = new Tape({
+    await tape({
       entry: "/index.html",
       files: {
         "/index.html": {
@@ -680,7 +667,6 @@ describe("plugin system", () => {
       },
       plugins: [transformPlugin1, transformPlugin2, transformPlugin3],
     });
-    await tape.build();
 
     expect(transform1).toHaveBeenCalledTimes(0);
     expect(transform2).toHaveBeenCalledTimes(1);
@@ -700,7 +686,7 @@ describe("plugin system", () => {
       package: package2,
     });
 
-    const tape = new Tape({
+    await tape({
       entry: "/index.html",
       files: {
         "/index.html": {
@@ -712,7 +698,6 @@ describe("plugin system", () => {
       },
       plugins: [packagePlugin1, packagePlugin2],
     });
-    await tape.build();
 
     expect(package1).toHaveBeenCalledTimes(2);
     expect(package2).toHaveBeenCalledTimes(2);
@@ -732,7 +717,7 @@ describe("plugin system", () => {
       package: package2,
     });
 
-    const tape = new Tape({
+    await tape({
       entry: "/index.html",
       files: {
         "/index.html": {
@@ -744,7 +729,6 @@ describe("plugin system", () => {
       },
       plugins: [packagePlugin2, packagePlugin1],
     });
-    await tape.build();
 
     expect(package1).toHaveBeenCalledTimes(1);
     expect(package2).toHaveBeenCalledTimes(2);
@@ -765,7 +749,7 @@ describe("plugin system", () => {
       optimize: optimizer2,
     });
 
-    const tape = new Tape({
+    await tape({
       entry: "/index.html",
       files: {
         "/index.html": {
@@ -777,7 +761,6 @@ describe("plugin system", () => {
       },
       plugins: [optimizerPlugin1, optimizerPlugin2],
     });
-    await tape.build();
 
     expect(optimizer1).toHaveBeenCalledTimes(2);
     expect(optimizer2).toHaveBeenCalledTimes(1);
@@ -796,11 +779,10 @@ describe("plugin system", () => {
       write: write2,
     });
 
-    const tape = new Tape({
+    await tape({
       ...validConfig,
       plugins: [writePlugin1, writePlugin2],
     });
-    await tape.build();
 
     expect(write1).toHaveBeenCalled();
     expect(write2).toHaveBeenCalledTimes(0);
@@ -818,17 +800,16 @@ describe("plugin system", () => {
       cleanup: cleanup2,
     });
 
-    const tape = new Tape({
+    await tape({
       ...validConfig,
       plugins: [cleanupPlugin1, cleanupPlugin2],
     });
-    await tape.build();
 
     expect(cleanup1).toHaveBeenCalled();
     expect(cleanup2).toHaveBeenCalled();
   });
 
-  test("[dev] should trigger onChange on dependents and embedded dependencies", async (done) => {
+  test.skip("[dev] should trigger onChange on dependents and embedded dependencies", async (done) => {
     const onChange = jest.fn();
     const onChangePlugin = () => ({
       name: "onChangePlugin",
