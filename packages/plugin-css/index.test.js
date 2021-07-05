@@ -1,4 +1,4 @@
-import { tape } from "../tape/index.js";
+import { tape } from "../tape/index.ts";
 import CSSPlugin from "./index.js";
 
 describe("CSSPlugin", () => {

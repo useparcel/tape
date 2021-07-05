@@ -1,4 +1,4 @@
-import { tape } from "../tape/index.js";
+import { tape } from "../tape/index.ts";
 import HTMLPlugin from "./index.js";
 
 test("html plugin should not collect empty `src` attributes as assets", async () => {

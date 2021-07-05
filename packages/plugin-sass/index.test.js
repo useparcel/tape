@@ -1,4 +1,4 @@
-import { tape } from "../tape/index.js";
+import { tape } from "../tape/index.ts";
 import SassPlugin from "./index.js";
 
 describe("SassPlugin", () => {

@@ -1,4 +1,4 @@
-import { tape } from "./index.js";
+import { tape } from "./index.ts";
 
 const validConfig = {
   entry: "/index.html",

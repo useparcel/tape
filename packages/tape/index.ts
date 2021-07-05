@@ -14,7 +14,6 @@ import {
   pickBy,
   pick,
   uniq,
-  isMap,
   isPlainObject,
   isArray,
 } from "lodash";
@@ -27,6 +26,16 @@ import CSSPlugin from "@useparcel/tape-css";
 import WritePlugin from "./default-write-plugin";
 import isValidFilename from "valid-filename";
 
+type Plugin = {};
+type PluginConstructor = (config?: any) => Plugin;
+type FileGetter = (path: string) => { content: string };
+
+type Config = {
+  plugins: PluginConstructor[];
+  entry: string;
+  files: FileGetter | { [file: string]: { content: string } | null };
+};
+
 class Tape {
   #cache = new Map();
   #emitter = mitt();
@@ -34,7 +43,8 @@ class Tape {
   pendingUpdates = [];
   isCompiling = false;
 
-  constructor({ plugins = [], entry, files } = {}) {
+  constructor(config: Config) {
+    const { plugins, entry, files } = config || {};
     if (!entry) {
       throw new Error("`entry` is required");
     }
@@ -50,72 +60,12 @@ class Tape {
       validateGivenFile(file);
     }
 
-    this.plugins = loadPlugins(plugins);
+    this.plugins = loadPlugins(plugins || []);
     this.entry = entry;
     this.files = mapKeys(
       mapValues(cloneDeep(files), this.#fileDefaults.bind(this)),
       "id"
     );
-
-    this.#emitter.on(
-      "processPendingUpdates",
-      this.#processPendingUpdates.bind(this)
-    );
-  }
-
-  #processPendingUpdates() {
-    let updatedIds = [];
-
-    for (let { entry, plugins, files } of this.pendingUpdates) {
-      if (entry && entry !== this.entry) {
-        this.entry = entry;
-        updatedIds.push(this.#pathToId(entry));
-      }
-
-      if (plugins) {
-        this.plugins = loadPlugins(plugins);
-
-        const context = this.#cache.get("context");
-        // Mark everything as updated if we change plugins
-        if (context) {
-          updatedIds.push(...context.graph.overallOrder());
-        }
-      }
-
-      for (const [path, file] of Object.entries(files)) {
-        const id = this.#pathToId(path);
-        // new file
-        if (!has(this.files, id)) {
-          this.files[id] = this.#fileDefaults(file, path);
-          updatedIds.push(id);
-        }
-        // delete file
-        else if (isFalsy(file)) {
-          delete this.files[id];
-          updatedIds.push(id);
-        }
-        // update file
-        else if (file.content !== this.files[id].content) {
-          this.files[id].content = file.content;
-          updatedIds.push(id);
-        }
-        // no change
-        else {
-          // do nothing
-        }
-      }
-    }
-
-    this.pendingUpdates = [];
-
-    /**
-     * no updates, so skip the event
-     */
-    if (updatedIds.length === 0) {
-      return;
-    }
-
-    this.#emitter.emit("update", updatedIds);
   }
 
   async build() {
@@ -130,7 +80,6 @@ class Tape {
     });
 
     this.isCompiling = false;
-    this.#emitter.emit("processPendingUpdates");
 
     return pick(
       {
