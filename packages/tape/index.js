@@ -725,6 +725,8 @@ class Tape {
         throw e;
       }
 
+      console.log(e);
+
       report({
         source: plugin.name,
         message: e.message,

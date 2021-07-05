@@ -1,5 +1,10 @@
 {
-  "presets": [["@babel/preset-env", { "targets": { "esmodules": true } }]],
+  "presets": [
+    [
+      "@babel/preset-env",
+      { "modules": "auto", "targets": { "esmodules": true } }
+    ]
+  ],
   "plugins": [
     "@babel/plugin-proposal-private-methods",
     "@babel/plugin-proposal-class-properties"

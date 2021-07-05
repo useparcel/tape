@@ -14,7 +14,7 @@ $ npm install find-embedded-documents
 const findEmbeddedDocuments = require("find-embedded-documents");
 
 const documents = findEmbeddedDocuments(`
-  <img src="my-image.png" />
+  <style>body {background: blue;}</style>
 `);
 // => [ { tag: 'style', type: 'css', content: '', range: [...] } ]
 ```
