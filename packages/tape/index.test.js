@@ -797,6 +797,27 @@ describe("plugin system", () => {
     expect(cleanup2).toHaveBeenCalledTimes(0);
   });
 
+  test("should run clean up functions on dispose", async () => {
+    const cleanup1 = jest.fn();
+    const cleanupPlugin1 = () => ({
+      name: "cleanupPlugin1",
+      cleanup: cleanup1,
+    });
+    const cleanup2 = jest.fn();
+    const cleanupPlugin2 = () => ({
+      name: "cleanupPlugin2",
+      cleanup: cleanup2,
+    });
+
+    await tape.dispose({
+      ...validConfig,
+      plugins: [cleanupPlugin1, cleanupPlugin2],
+    });
+
+    expect(cleanup1).toHaveBeenCalledTimes(1);
+    expect(cleanup2).toHaveBeenCalledTimes(1);
+  });
+
   test("returns all diagnostics", async () => {
     function reportStage(stage) {
       return ({ asset, report }) => {

@@ -44,6 +44,12 @@ export function tape(config: Config) {
   return instance.build();
 }
 
+tape.dispose = function (config: Config) {
+  const instance = new Tape(config);
+
+  return instance.dispose();
+};
+
 class Tape {
   #cache = new Map();
   #idToPathMap = {};
@@ -105,6 +111,15 @@ class Tape {
     const results = await this.#compile();
 
     return pick(results, ["entry", "files", "diagnostics"]);
+  }
+
+  async dispose() {
+    const report = generateReporter();
+    const plugins = this.plugins.filter((plugin) => isFunction(plugin.cleanup));
+
+    for (const plugin of plugins) {
+      await this.#runPlugin(plugin, "cleanup", { report });
+    }
   }
 
   /**

@@ -162,6 +162,12 @@ catch(error) {
 }
 ```
 
+### tape.dispose()
+
+Runs the `cleanup()` function for each plugin. Should be called after each session you are done running tape. For example, when the user navigates to a new page, you should run it then.
+
+It should be given the same exact configuration as `tape()`.
+
   
 ## Plugins  
 
@@ -212,7 +218,7 @@ function  myTapePlugin(config) {
 }
 ```
 
-#### `transform({ asset, addDependency, env, report, cache })`
+#### `transform({ asset, addDependency, report, cache })`
 
 Transform assets, add dependencies, and extract inline assets.
 In the following example we are going to transform pug, a template language.
@@ -334,7 +340,7 @@ function pugPlugin() {
 }
 ```
 
-#### `package({ asset, resolveAsset, getAssetContent, env, report, cache })`
+#### `package({ asset, resolveAsset, getAssetContent, report, cache })`
 
 After all transformations are done, `package` should reinsert the processed embedded assets and replace the original references to dependencies.
 
@@ -342,7 +348,7 @@ Odds are you should not be using this method since HTML and CSS are already pack
 
 For an example, check out the [HTML plugin](https://github.com/useparcel/tape/blob/main/packages/plugin-html/index.js#L23).  
 
-#### `optimize({ asset, resolveAsset, getAssetContent, env, report, cache })`
+#### `optimize({ asset, resolveAsset, getAssetContent, report, cache })`
 
 `optimize` is similar to transformer in that it arbitrarily modifies the file contents however it runs after paths have already been packaged, right before the file is written.
 
@@ -367,7 +373,7 @@ function prettifyHTMLPlugin(config) {
 }
 ```
 
-#### `write({ asset, resolveAsset, getAssetContent, env, report, cache })`
+#### `write({ asset, resolveAsset, getAssetContent, report, cache })`
 
 The `write` function should output the file contents to the target. Unlike all the other plugin methods only one plugin with a `write` method will be run for each file.
 
@@ -401,7 +407,7 @@ function writeFSPlugin({ buildDir  =  '.tape' }) {
 ```
  
 
-#### `onChange({ asset, env, report, cache })`
+#### `onChange({ asset, report, cache })`
 
 `onChange` is only called when a file is changed and a build is triggered with a previous cache.
   
@@ -426,9 +432,9 @@ function writeFSPlugin({ buildDir }) {
 }
 ```
 
-#### `cleanup({ env, report })`
+#### `cleanup({ report })`
 
-`cleanup` is called when `tape.dispose()` callled. It has a similar purpose to `onChange` - it is for managing the side effects and cache from a build.
+`cleanup` is called when `tape.dispose()` is called. It has a similar purpose to `onChange` - it is for managing the side effects and cache from a build.
 
 Continuing with the previous example we want to clean up the files after we are done using tape.
 
@@ -499,9 +505,8 @@ function writeFSPlugin({ buildDir }) {
 
       return absolutePath;
     }
-
     async onChange() {...},
-    async cleanup({ env }) {...}
+    async cleanup() {...}
   }
 }
 ```

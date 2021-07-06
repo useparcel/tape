@@ -30,6 +30,7 @@ export type PluginMethod =
   | "package"
   | "optimize"
   | "write"
+  | "cleanup"
   | "onChange";
 export type Plugin = {
   name: string;
