@@ -13,6 +13,7 @@ HTML build tool that runs entirely in the browser 🎁
 
 * Works with a lightweight file interface
 * Compiles dependencies
+* Rebuilds the minimum number of files on updates
 * Runs in the browser and server
 
 ## Install
@@ -62,7 +63,7 @@ const results = await tape({
 ### tape()
   
 ```js
-const results = await tape({ entry, files, plugins, signal })
+const results = await tape({ entry, files, plugins, cache, signal })
 ```
 
 #### `entry`
@@ -90,7 +91,7 @@ If it is an function it should take a path as the only parameter and return the 
 ```js
 import { readFile } from 'fs/promises';
 
-const fileLoader(path) {
+const getFileForTape(path) {
   const content = await readFile(path, 'utf8');
   return { content }
 }
@@ -108,6 +109,11 @@ const plugins = [
 ]
 ```
 
+#### `cache`
+> `Map` | optional
+
+Cache from a previous build result. Will be used to only rebuild the changed files.
+
 #### `signal`
 > `AbortSignal` | optional
 
@@ -117,12 +123,13 @@ The `AbortSignal` from an `AbortController`. Passing this in allows you to abort
 const controller = new AbortController();
 const signal = controller.signal;
 
+const results = await tape({ entry, files, signal });
+
 // stops the build if it took more than 500ms
 setTimeout(() => {
   controller.abort();
 }, 500)
 
-const results = await tape({ entry, files, signal });
 ```
 
 
@@ -132,6 +139,7 @@ Returns a Promise which resolves an object with the following keys:
 *  `entry` (`String`) - Entry path for outputted files
 *  `files` (`Object`) - Contains built file objects. See [file definition](#file) for more.
 *  `diagnostics` (`Array`) - Contains a list of diagnostic messages. [See diagnostic definition](#diagnostic) for more.
+*  `cache` (`Map`) - Cache from the build results. Can be passed into future builds to only rebuild changed files.
 
 **Error handling**
 
@@ -141,7 +149,7 @@ It will reject the promise if it runs into a fatal error or if the build is abor
 
 ```js
 try {
-  const { entry, files, diagnostics } = await tape({ entry, files, plugins, signal })
+  const { entry, files, diagnostics } = await tape({ entry, files, plugins, cache, signal })
 
   console.log(`Here is the output:\n${files[entry]}`)  
 
@@ -193,6 +201,7 @@ Each plugin is a function that accepts a config object and returns an object wit
 * package (`Function` | `optional`)
 * optimize (`Function` | `optional`)
 * write (`Function` | `optional`)
+* onChange (`Function` | `optional`)
   
 ```js
 function  myTapePlugin(config) {
@@ -209,7 +218,7 @@ function  myTapePlugin(config) {
 }
 ```
 
-#### `transform({ asset, addDependency, report })`
+#### `transform({ asset, addDependency, report, cache })`
 
 Transform assets, add dependencies, and extract inline assets.
 In the following example we are going to transform pug, a template language.
@@ -331,7 +340,7 @@ function pugPlugin() {
 }
 ```
 
-#### `package({ asset, resolveAsset, getAssetContent, report })`
+#### `package({ asset, resolveAsset, getAssetContent, report, cache })`
 
 After all transformations are done, `package` should reinsert the processed embedded assets and replace the original references to dependencies.
 
@@ -339,7 +348,7 @@ Odds are you should not be using this method since HTML and CSS are already pack
 
 For an example, check out the [HTML plugin](https://github.com/useparcel/tape/blob/main/packages/plugin-html/index.js#L23).  
 
-#### `optimize({ asset, resolveAsset, getAssetContent, report })`
+#### `optimize({ asset, resolveAsset, getAssetContent, report, cache })`
 
 `optimize` is similar to transformer in that it arbitrarily modifies the file contents however it runs after paths have already been packaged, right before the file is written.
 
@@ -364,38 +373,68 @@ function prettifyHTMLPlugin(config) {
 }
 ```
 
-#### `write({ asset, resolveAsset, getAssetContent, report })`
+#### `write({ asset, resolveAsset, getAssetContent, report, cache })`
 
 The `write` function should output the file contents to the target. Unlike all the other plugin methods only one plugin with a `write` method will be run for each file.
 
 The function should return the absolute path to the file.
 
-Below we will write the files to the file system.
+Below we will write the files to the file system. After each write save the absolute path to the cache so on the next build we don't have to rebuild it unless there is a change.
 
 ```js
 const fs = require('fs-extra')
 const path = require('path')
 
-function writeFSPlugin({ buildDir = '.tape' }) {
+function writeFSPlugin({ buildDir  =  '.tape' }) {
   return {
     name: 'write-fs',
-    async write({ asset }) {      
+    async write({ asset, cache }) {
+      if (cache.has(asset.path)) {
+        return cache.get(asset.path);
+      }
+      
       const dir = path.join(buildDir, asset.source.dir)
       const absolutePath = path.join(dir, `${asset.source.name}${asset.ext}`)
 
       await fs.ensureDir(dir)
       await fs.write(absolutePath, asset.content)
       
-      return absolutePath;
+      cache.set(asset.path, absolutePath)
+      return  absolutePath;
+    }
+  }
+}
+```
+ 
+
+#### `onChange({ asset, report, cache })`
+
+`onChange` is only called when a file is changed and a build is triggered with a previous cache.
+  
+In the `write` example above we saved the absolute file path to the cache. When the file changes we should delete that file and remove that path from the cache.  
+
+```js
+const fs = require('fs-extra')
+  
+function writeFSPlugin({ buildDir }) {
+  return {
+    name: 'write-fs',
+    async write() {...},
+    async onChange({ asset, cache }) {
+      if (cache.has(asset.path)) {
+        const absolutePath = cache.get(asset.path)
+        await fs.unlink(absolutePath)
+
+        cache.delete(asset.path)
+      }
     }
   }
 }
 ```
 
-
 #### `cleanup({ report })`
 
-`cleanup` is called when `tape.dispose()` is called. It is for managing the side effects and cache from a build.
+`cleanup` is called when `tape.dispose()` is called. It has a similar purpose to `onChange` - it is for managing the side effects and cache from a build.
 
 Continuing with the previous example we want to clean up the files after we are done using tape.
 
@@ -406,6 +445,7 @@ function writeFSPlugin({ buildDir }) {
   return {
     name: 'write-fs',
     async write() {...},
+    async onChange() {...},
     async cleanup() {
       await fs.emptyDir(buildDir)
     }
@@ -436,7 +476,7 @@ It also had 3 shortcuts for reporting:
 * `report.warning(diagnostic)`
 * `report.error(diagnostic)`
   
-Here we will add an `info` diagnostic report for when we write the file in our `write-fs` plugin.
+Here we will add an `info` diagnostic report for when the cache missed in our `write-fs` plugin.
 
 ```js
 const fs = require('fs-extra')
@@ -444,11 +484,15 @@ const fs = require('fs-extra')
 function writeFSPlugin({ buildDir }) {
   return {
     name: 'write-fs',
-    async write({ asset, report }) {
-
+    async write({ asset, cache, report }) {
+      if (cache.has(asset.path)) {
+        return  cache.get(asset.path)
+      }
+  
+      // Report the cache missed
       report({
         type: 'info',
-        message: 'Writing to file system.'
+        message: 'No cache was found. Writing to file system.'
       })
 
 
@@ -457,9 +501,11 @@ function writeFSPlugin({ buildDir }) {
 
       await fs.ensureDir(dir)
       await fs.write(absolutePath, asset.content)
+      cache.set(asset.path, absolutePath)
 
       return absolutePath;
     }
+    async onChange() {...},
     async cleanup() {...}
   }
 }
