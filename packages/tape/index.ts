@@ -16,6 +16,7 @@ import {
   uniq,
   isPlainObject,
   isArray,
+  memoize,
 } from "lodash";
 import { DepGraph as Graph } from "dependency-graph";
 import { extname, dirname, basename, resolve as resolvePath } from "path";
@@ -34,6 +35,7 @@ import {
   PluginConstructor,
   PluginMethod,
   Diagnostic,
+  FileLoader,
 } from "./types";
 
 export function tape(config: Config) {
@@ -47,7 +49,8 @@ class Tape {
   #idToPathMap = {};
   plugins: Plugin[];
   entry: string;
-  files: { [file: string]: { content: string } | null };
+  assets: { [id: string]: Asset } = {};
+  assetLoader: (path: string) => Promise<Asset>;
 
   constructor(config: Config) {
     const { plugins, entry, files } = config || {};
@@ -61,17 +64,41 @@ class Tape {
       throw new Error("`files` is required");
     }
 
-    for (const [path, file] of Object.entries(files)) {
-      validatePath(path);
-      validateGivenFile(file);
-    }
+    if (isPlainObject(files))
+      for (const [path, file] of Object.entries(files)) {
+        validatePath(path);
+        validateGivenFile(file);
+      }
 
     this.plugins = loadPlugins(plugins || []);
     this.entry = entry;
-    this.files = mapKeys(
-      mapValues(cloneDeep(files), this.#fileDefaults.bind(this)),
-      "id"
-    );
+
+    let baseFileLoader: FileLoader;
+    if (isFunction(files)) {
+      baseFileLoader = files;
+    } else {
+      const resolvedFiles = mapKeys({ ...files }, (file, path) => {
+        return resolvePath("/", path);
+      });
+      baseFileLoader = async function (path) {
+        return resolvedFiles[path];
+      };
+    }
+
+    this.assetLoader = async (id) => {
+      if (has(this.assets, id)) {
+        return get(this.assets, id);
+      }
+
+      const path = this.#idToPath(id);
+      const asset = await baseFileLoader(path);
+      if (asset) {
+        this.assets[id] = this.#fileDefaults(asset, path);
+        return this.assets[id];
+      }
+
+      return asset;
+    };
   }
 
   async build() {
@@ -100,13 +127,13 @@ class Tape {
       resolveMap,
       diagnostics,
     }: {
-      graph: Graph<string>;
+      graph: Graph<any>;
       transformedAssets: { [path: string]: Asset };
       packagedAssets: { [path: string]: Asset };
       resolveMap: { [id: string]: string };
       diagnostics: Diagnostic[];
     } = defaults({}, context, {
-      graph: new Graph<string>(),
+      graph: new Graph<any>(),
       transformedAssets: {},
       packagedAssets: {},
       resolveMap: {},
@@ -170,7 +197,7 @@ class Tape {
     }) {
       id = id || pathToId(path, dir);
 
-      return self.files[id].content;
+      return self.assets[id].content;
     }
 
     /**
@@ -194,6 +221,9 @@ class Tape {
 
     const report = generateReporter();
 
+    /**
+     * Generate context for the given asset to be passed to plugin methods
+     */
     function generateAssetContext<
       Field extends "addDependency" | "resolveAsset"
     >(
@@ -258,18 +288,14 @@ class Tape {
     /********************************
      * Transform
      *******************************/
-    let assets: { [path: string]: Asset } = cloneDeep(
-      omit(this.files, keys(transformedAssets))
-    );
-
-    if (has(assets, entryId)) {
-      assets[entryId].isEntry = true;
-    }
-
     let dependencies = [entryId];
     while (dependencies.length > 0) {
       const id = dependencies.shift();
-      const asset = assets[id];
+      const asset = await this.assetLoader(id);
+
+      if (asset && id === entryId) {
+        asset.isEntry = true;
+      }
 
       /**
        * We have the asset already from the given context
@@ -313,8 +339,8 @@ class Tape {
       /**
        * add the embedded assets to our assets list
        */
-      assets = {
-        ...assets,
+      this.assets = {
+        ...this.assets,
         ...mapKeys(embeddedAssets, "id"),
       };
 

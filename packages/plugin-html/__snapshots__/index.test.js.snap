@@ -12,17 +12,17 @@ Object {
 }
 `;
 
-exports[`html plugin should ignore whitepscape 1`] = `
+exports[`html plugin should ignore whitespace 1`] = `
 Object {
   "diagnostics": Array [],
   "entry": "/index.html",
   "files": Object {
     "/index.html": Object {
       "content": "
-          <img src=\\"     my-image.png     \\" /> 
+          <img src=\\"     /my-image.png     \\" /> 
         ",
     },
-    "my-image.png": Object {
+    "/my-image.png": Object {
       "content": "link to image",
     },
   },

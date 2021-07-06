@@ -1,85 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`build should change the output when built after an update 1`] = `
-Object {
-  "diagnostics": Array [],
-  "entry": "/index.html",
-  "files": Object {
-    "/index.html": Object {
-      "content": "
-            <html>
-              <head>
-                <style>
-                  body.this-is-an-embedded-asset {
-                    background: blue;
-                  }
-                </style>
-                <link rel=\\"stylesheet\\" href=\\"/style.css\\">
-              </head>
-              <body>
-                body
-              </body>
-            </html>
-          ",
-    },
-    "/reset.css": Object {
-      "content": "
-            body {
-              margin: 0;
-            }
-          ",
-    },
-    "/style.css": Object {
-      "content": "
-            @import '/reset.css'
-          ",
-    },
-  },
-}
-`;
-
-exports[`build should change the output when built after an update 2`] = `
-Object {
-  "diagnostics": Array [],
-  "entry": "/index.html",
-  "files": Object {
-    "/index.html": Object {
-      "content": "
-            <html>
-              <head>
-                <style>
-                  body.this-is-an-embedded-asset {
-                    background: blue;
-                  }
-                </style>
-                <link rel=\\"stylesheet\\" href=\\"/style.css\\">
-              </head>
-              <body>
-                body
-              </body>
-            </html>
-          ",
-    },
-    "/reset.css": Object {
-      "content": "
-            html {
-              margin: 0;
-            }
-
-            body {
-              margin: 0;
-            }
-          ",
-    },
-    "/style.css": Object {
-      "content": "
-            @import '/reset.css'
-          ",
-    },
-  },
-}
-`;
-
 exports[`build should work for a complex example that includes a bunch of dependencies and embedded documents 1`] = `
 Object {
   "diagnostics": Array [],
@@ -113,6 +33,44 @@ Object {
       "content": "
             @import '/reset.css'
           ",
+    },
+  },
+}
+`;
+
+exports[`build should work with async file loader 1`] = `
+Object {
+  "diagnostics": Array [],
+  "entry": "/index.html",
+  "files": Object {
+    "/index.html": Object {
+      "content": "
+          <html>
+            <head>
+              <style>
+                body.this-is-an-embedded-asset {
+                  background: blue;
+                }
+              </style>
+              <link rel=\\"stylesheet\\" href=\\"/style.css\\">
+            </head>
+            <body>
+              body
+            </body>
+          </html>
+        ",
+    },
+    "/reset.css": Object {
+      "content": "
+          body {
+            margin: 0;
+          }
+        ",
+    },
+    "/style.css": Object {
+      "content": "
+          @import '/reset.css'
+        ",
     },
   },
 }

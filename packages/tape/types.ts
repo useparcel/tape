@@ -61,7 +61,7 @@ export type Plugin = {
   cleanup?: (context: Pick<AssetContext, "report">) => Promise<void>;
 };
 
-export type FileGetter = (path: string) => { content: string };
+export type FileLoader = (path: string) => Promise<{ content: string }>;
 
 export type Diagnostic = {
   type?: string;
@@ -84,7 +84,7 @@ export type Cache = Map<string, any>;
 
 export type Config = {
   entry: string;
-  files: FileGetter | { [file: string]: { content: string } | null };
+  files: FileLoader | { [file: string]: { content: string } | null };
   plugins?: PluginLoader[];
   // cache?: Cache;
   // signal?: AbortSignal;

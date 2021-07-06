@@ -194,74 +194,6 @@ describe("build", () => {
     expect(results).toMatchSnapshot();
   });
 
-  test.skip("should change the output when built after an update", async () => {
-    /**
-     * This config has the following important features:
-     * - entry file
-     * - embedded asset (the style tag)
-     * - dependency from entry (/style.css)
-     * - dependency from depencency (/reset.css)
-     */
-    const config = {
-      entry: "/index.html",
-      files: {
-        "/index.html": {
-          content: `
-            <html>
-              <head>
-                <style>
-                  body.this-is-an-embedded-asset {
-                    background: blue;
-                  }
-                </style>
-                <link rel="stylesheet" href="/style.css">
-              </head>
-              <body>
-                body
-              </body>
-            </html>
-          `,
-        },
-        "/style.css": {
-          content: `
-            @import 'reset.css'
-          `,
-        },
-        "/reset.css": {
-          content: `
-            body {
-              margin: 0;
-            }
-          `,
-        },
-      },
-    };
-
-    const tape = new Tape(config);
-
-    const results1 = await tape.build();
-    expect(results1).toMatchSnapshot();
-
-    tape.update({
-      files: {
-        "/reset.css": {
-          content: `
-            html {
-              margin: 0;
-            }
-
-            body {
-              margin: 0;
-            }
-          `,
-        },
-      },
-    });
-
-    const results2 = await tape.build();
-    expect(results2).toMatchSnapshot();
-  });
-
   test("should throw an error with recursive dependencies", async () => {
     /**
      * This config has the following important features:
@@ -299,6 +231,63 @@ describe("build", () => {
     };
 
     await expect(tape(config)).rejects.toThrow(/cycle/i);
+  });
+
+  test("should work with async file loader", async () => {
+    /**
+     * This config has the following important features:
+     * - entry file
+     * - embedded asset (the style tag)
+     * - dependency from entry (/style.css)
+     * - dependency from depencency (/reset.css)
+     */
+    const files = {
+      "/index.html": {
+        content: `
+          <html>
+            <head>
+              <style>
+                body.this-is-an-embedded-asset {
+                  background: blue;
+                }
+              </style>
+              <link rel="stylesheet" href="/style.css">
+            </head>
+            <body>
+              body
+            </body>
+          </html>
+        `,
+      },
+      "/style.css": {
+        content: `
+          @import 'reset.css'
+        `,
+      },
+      "/reset.css": {
+        content: `
+          body {
+            margin: 0;
+          }
+        `,
+      },
+      "/not-used.css": {
+        content: "this isn't in the dependency tree of the entry file",
+      },
+    };
+
+    const config = {
+      entry: "/index.html",
+      files: function (path) {
+        return new Promise((resolve) => {
+          setTimeout(() => resolve(files[path]), 500);
+        });
+      },
+    };
+
+    const results = await tape(config);
+
+    expect(results).toMatchSnapshot();
   });
 });
 
@@ -608,7 +597,6 @@ describe.skip("update", () => {
   });
 });
 
-// TODO: duplicate all tests for dev mode too?
 describe("plugin system", () => {
   test("loads plugins with the given config", async () => {
     // run only on txt (0 times)

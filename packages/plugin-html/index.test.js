@@ -18,7 +18,7 @@ test("html plugin should not collect empty `src` attributes as assets", async ()
   expect(results).toMatchSnapshot();
 });
 
-test("html plugin should ignore whitepscape", async () => {
+test("html plugin should ignore whitespace", async () => {
   const config = {
     entry: "/index.html",
     files: {
