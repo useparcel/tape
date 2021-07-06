@@ -33,6 +33,7 @@ import {
   Config,
   PluginConstructor,
   PluginMethod,
+  Diagnostic,
 } from "./types";
 
 export function tape(config: Config) {
@@ -98,8 +99,14 @@ class Tape {
       packagedAssets,
       resolveMap,
       diagnostics,
+    }: {
+      graph: Graph<string>;
+      transformedAssets: { [path: string]: Asset };
+      packagedAssets: { [path: string]: Asset };
+      resolveMap: { [id: string]: string };
+      diagnostics: Diagnostic[];
     } = defaults({}, context, {
-      graph: newGraph(),
+      graph: new Graph<string>(),
       transformedAssets: {},
       packagedAssets: {},
       resolveMap: {},
@@ -187,7 +194,21 @@ class Tape {
 
     const report = generateReporter();
 
-    const generateAssetContext = (
+    function generateAssetContext<
+      Field extends "addDependency" | "resolveAsset"
+    >(
+      asset: Asset,
+      fields: Field[]
+    ): Pick<AssetContext, "asset" | "report"> & Pick<AssetContext, Field>;
+    function generateAssetContext<
+      Field extends "addDependency" | "resolveAsset"
+    >(
+      asset: Asset,
+      fields: (Field | "getSourceAssetContent" | "getPackagedAssetContent")[]
+    ): Pick<AssetContext, "asset" | "report"> &
+      Pick<AssetContext, Field | "getAssetContent">;
+
+    function generateAssetContext(
       asset: Asset,
       fields: (
         | "addDependency"
@@ -195,7 +216,7 @@ class Tape {
         | "getSourceAssetContent"
         | "getPackagedAssetContent"
       )[]
-    ) => {
+    ) {
       const context: Partial<AssetContext> & {
         getSourceAssetContent?: ({ id, path }) => string;
         getPackagedAssetContent?: ({ id, path }) => string;
@@ -222,17 +243,17 @@ class Tape {
       if (context.getSourceAssetContent) {
         context.getAssetContent = context.getSourceAssetContent;
         delete context.getSourceAssetContent;
-      }
 
-      if (context.getPackagedAssetContent) {
+        return context;
+      } else if (context.getPackagedAssetContent) {
         context.getAssetContent = context.getPackagedAssetContent;
         delete context.getPackagedAssetContent;
-      }
 
-      return context as
-        | Pick<AssetContext, "asset" | "report">
-        | Partial<AssetContext>;
-    };
+        return context;
+      } else {
+        return context;
+      }
+    }
 
     /********************************
      * Transform
@@ -395,7 +416,10 @@ class Tape {
    * Transformers are responsible for converting syntaxes (i.e. mjml to html) as
    * well as for gathering all dependencies.
    */
-  async #transformAsset({ asset, ...props }) {
+  async #transformAsset({
+    asset,
+    ...props
+  }: Omit<Parameters<Plugin["transform"]>[0], "cache">): Promise<Asset[]> {
     let transformingAsset = { ...asset };
     let generatedAssets = [];
 
@@ -454,7 +478,10 @@ class Tape {
    *
    * This is where final dependency urls should be inserted
    */
-  async #packageAsset({ asset, ...props }) {
+  async #packageAsset({
+    asset,
+    ...props
+  }: Omit<Parameters<Plugin["package"]>[0], "cache">): Promise<Asset> {
     let packagingAsset = { ...asset };
 
     const plugins = this.plugins.filter((plugin) =>
@@ -474,7 +501,10 @@ class Tape {
   /**
    * Runs the asset through all optimizer plugins
    */
-  async #optimizeAsset({ asset, ...props }) {
+  async #optimizeAsset({
+    asset,
+    ...props
+  }: Omit<Parameters<Plugin["optimize"]>[0], "cache">): Promise<Asset> {
     let optimizingAsset = { ...asset };
 
     const plugins = this.plugins.filter((plugin) =>
@@ -493,7 +523,10 @@ class Tape {
   /**
    * Run the asset through the first matching write plugin
    */
-  async #writeAsset({ asset, ...props }) {
+  async #writeAsset({
+    asset,
+    ...props
+  }: Omit<Parameters<Plugin["write"]>[0], "cache">): Promise<string> {
     // we add a default write plugin so we always have one
     let plugin = this.plugins.find((plugin) =>
       shouldRunPlugin(plugin, "write", asset.ext)
@@ -508,7 +541,7 @@ class Tape {
   #runPlugin<T extends PluginMethod>(
     plugin: Plugin,
     method: T,
-    { report, ...props }: Parameters<Plugin["transform"]>[0]
+    { report, ...props }: Omit<Parameters<Plugin[T]>[0], "cache">
   ): ReturnType<Plugin[T]> {
     try {
       return plugin[method]({
@@ -543,14 +576,14 @@ class Tape {
   /**
    * Converts a path to an id
    */
-  #idToPath(id: string) {
+  #idToPath(id: string): string {
     return get(this.#idToPathMap, id, id);
   }
 
   /**
    * Sets the default values for a given file and path
    */
-  #fileDefaults(file, path) {
+  #fileDefaults(file: Asset, path: string): Asset {
     const ext = extname(path);
 
     return {
@@ -620,13 +653,13 @@ function validateGivenFile(file) {
 /**
  * Creates namespaced access to a cache
  */
-function cacheNamespace(cache, namespace) {
+function cacheNamespace(cache: Map<string, any>, namespace: string) {
   const prefix = `${namespace}:`;
   return {
-    get: (key) => cache.get(`${prefix}${key}`),
-    set: (key, value) => cache.set(`${prefix}${key}`, value),
-    has: (key) => cache.has(`${prefix}${key}`),
-    delete: (key) => cache.delete(`${prefix}${key}`),
+    get: (key: string) => cache.get(`${prefix}${key}`),
+    set: (key: string, value: any) => cache.set(`${prefix}${key}`, value),
+    has: (key: string) => cache.has(`${prefix}${key}`),
+    delete: (key: string) => cache.delete(`${prefix}${key}`),
     entries: () =>
       [...cache.entries()].filter(([key]) => key.startsWith(prefix)),
   };
@@ -635,7 +668,7 @@ function cacheNamespace(cache, namespace) {
 /**
  * Checked if the plugin should run for the given method and extention
  */
-function shouldRunPlugin(plugin, method, ext) {
+function shouldRunPlugin(plugin: Plugin, method: PluginMethod, ext: string) {
   const exts = forceArray(get(plugin, "exts"));
 
   if (!isFunction(get(plugin, method))) {
@@ -647,15 +680,6 @@ function shouldRunPlugin(plugin, method, ext) {
   }
 
   return exts.length === 0;
-}
-
-/**
- * Returns a new dependency graph with some extra methods
- */
-function newGraph() {
-  const graph = new Graph();
-
-  return graph;
 }
 
 /**

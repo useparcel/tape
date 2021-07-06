@@ -1,14 +1,16 @@
 import { Reporter } from "./reporter";
 
-export type AssetExtension = `.${string}`;
-
 export type Asset = {
   content: string | null;
   id?: string;
+  ext?: string;
   isEntry?: boolean;
+  embedded?: boolean;
   source?: {
-    dir: string;
+    ext: string;
     path: string;
+    dir: string;
+    name: string;
   };
 };
 
@@ -31,7 +33,7 @@ export type PluginMethod =
   | "onChange";
 export type Plugin = {
   name: string;
-  exts?: AssetExtension[];
+  exts?: string[];
   transform?: (
     context: Pick<AssetContext, "asset" | "report" | "cache" | "addDependency">
   ) => Promise<Asset | Asset[]>;
@@ -48,7 +50,10 @@ export type Plugin = {
     >
   ) => Promise<Asset>;
   write?: (
-    context: Pick<AssetContext, "asset" | "report" | "cache" | "addDependency">
+    context: Pick<
+      AssetContext,
+      "asset" | "report" | "cache" | "getAssetContent"
+    >
   ) => Promise<string>;
   onChange?: (
     context: Pick<AssetContext, "asset" | "report" | "cache">
@@ -81,6 +86,6 @@ export type Config = {
   entry: string;
   files: FileGetter | { [file: string]: { content: string } | null };
   plugins?: PluginLoader[];
-  cache?: Cache;
-  signal?: AbortSignal;
+  // cache?: Cache;
+  // signal?: AbortSignal;
 };
