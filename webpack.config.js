@@ -1,61 +1,64 @@
 const webpack = require("webpack");
 const nodeExternals = require("webpack-node-externals");
 
-const bundle = (dir) => (env, argv) => {
-  return {
-    entry: `${__dirname}/packages/${dir}/index.js`,
-    devtool: argv.mode === "development" ? "source-map" : false,
-    output: {
-      path: `${__dirname}/packages/${dir}/dist`,
-      filename: "index.js",
-      libraryTarget: "commonjs2",
-    },
-    plugins: [
-      // node polyfills
-      new webpack.ProvidePlugin({ Buffer: ["buffer", "Buffer"] }),
-      new webpack.ProvidePlugin({ process: ["process"] }),
-      new webpack.ProvidePlugin({ url: ["url"] }),
-      new webpack.ProvidePlugin({ util: ["util"] }),
-    ],
-    resolve: {
-      // node polyfills
-      fallback: {
-        stream: require.resolve("stream-browserify"),
-        crypto: require.resolve("crypto-browserify"),
-        path: require.resolve("path-browserify"),
-        fs: false,
+const bundle =
+  (dir, file = "index.js") =>
+  (env, argv) => {
+    return {
+      entry: `${__dirname}/packages/${dir}/${file}`,
+      devtool: argv.mode === "development" ? "source-map" : false,
+      output: {
+        path: `${__dirname}/packages/${dir}/dist`,
+        filename: "index.js",
+        libraryTarget: "commonjs2",
       },
-    },
-    externals: [
-      nodeExternals(),
-      nodeExternals({
-        modulesDir: `${__dirname}/packages/${dir}/node_modules`,
-      }),
-    ],
-    module: {
-      rules: [
-        // Since we are using nodeExternals, webpack resolve.alias doesn't work.
-        // To get around that, we do a straight replace on the import.
-        {
-          test: /index\.js$/,
-          exclude: /(node_modules|bower_components)/,
-          loader: "string-replace-loader",
-          options: {
-            search: `from "sass"`,
-            replace: `from "sass.js"`,
-          },
-        },
-        {
-          test: /\.m?js$/,
-          exclude: /(node_modules|bower_components)/,
-          use: {
-            loader: "babel-loader",
-          },
-        },
+      plugins: [
+        // node polyfills
+        new webpack.ProvidePlugin({ Buffer: ["buffer", "Buffer"] }),
+        new webpack.ProvidePlugin({ process: ["process"] }),
+        new webpack.ProvidePlugin({ url: ["url"] }),
+        new webpack.ProvidePlugin({ util: ["util"] }),
       ],
-    },
+      resolve: {
+        extensions: [".ts", ".js", ".json"],
+        // node polyfills
+        fallback: {
+          stream: require.resolve("stream-browserify"),
+          crypto: require.resolve("crypto-browserify"),
+          path: require.resolve("path-browserify"),
+          fs: false,
+        },
+      },
+      externals: [
+        nodeExternals(),
+        nodeExternals({
+          modulesDir: `${__dirname}/packages/${dir}/node_modules`,
+        }),
+      ],
+      module: {
+        rules: [
+          // Since we are using nodeExternals, webpack resolve.alias doesn't work.
+          // To get around that, we do a straight replace on the import.
+          {
+            test: /index\.js$/,
+            exclude: /(node_modules|bower_components)/,
+            loader: "string-replace-loader",
+            options: {
+              search: `from "sass"`,
+              replace: `from "sass.js"`,
+            },
+          },
+          {
+            test: /\.m?js|\.ts$/,
+            exclude: /(node_modules|bower_components)/,
+            use: {
+              loader: "babel-loader",
+            },
+          },
+        ],
+      },
+    };
   };
-};
 
 module.exports = [
   bundle("css-select-codsen-parser"),
@@ -86,5 +89,5 @@ module.exports = [
   bundle("plugin-html-minify"),
   bundle("plugin-html-prettify"),
   bundle("plugin-sass"),
-  bundle("tape"),
+  bundle("tape", "index.ts"),
 ];
