@@ -291,6 +291,83 @@ describe("build", () => {
   });
 });
 
+describe.skip("rebuild", () => {
+  test("only rebuilds changed files", async () => {});
+  test("runs onChange for changed assets", async () => {});
+  test("should trigger onChange on dependents and embedded dependencies", async (done) => {
+    const onChange = jest.fn();
+    const onChangePlugin = () => ({
+      name: "onChangePlugin",
+      onChange,
+    });
+
+    const tape = new Tape({
+      entry: "index.html",
+      plugins: [onChangePlugin],
+      files: {
+        "/index.html": {
+          content: `
+            <html>
+              <head>
+                <style>
+                  body.this-is-an-embedded-asset {
+                    background: blue;
+                  }
+                </style>
+                <link rel="stylesheet" href="/style.css">
+              </head>
+              <body>
+                body
+              </body>
+            </html>
+          `,
+        },
+        "/style.css": {
+          content: `
+            @import 'reset.css'
+          `,
+        },
+        "/reset.css": {
+          content: `
+            @import 'not-triggered.css';
+
+            body {
+              margin: 0;
+            }
+          `,
+        },
+        "/not-triggered.css": {
+          content: `I am not triggered since I'm not dependent on reset.css`,
+        },
+      },
+    });
+
+    const manager = tape.dev();
+
+    manager.on("update", (updatedIds) => {
+      expect(updatedIds).toHaveLength(1);
+    });
+
+    let first = true;
+    manager.on("end", async () => {
+      if (first) {
+        first = false;
+        tape.update({
+          files: {
+            "/reset.css": {
+              content: `updated`,
+            },
+          },
+        });
+      } else {
+        expect(onChange).toHaveBeenCalledTimes(4);
+        await manager.close();
+        done();
+      }
+    });
+  });
+});
+
 describe("abort controller", () => {
   test("should immediately error the build", () => {
     const controller = new AbortController();
@@ -595,78 +672,5 @@ describe("plugin system", () => {
     });
 
     expect(diagnostics).toHaveLength(8);
-  });
-
-  test.skip("[dev] should trigger onChange on dependents and embedded dependencies", async (done) => {
-    const onChange = jest.fn();
-    const onChangePlugin = () => ({
-      name: "onChangePlugin",
-      onChange,
-    });
-
-    const tape = new Tape({
-      entry: "index.html",
-      plugins: [onChangePlugin],
-      files: {
-        "/index.html": {
-          content: `
-            <html>
-              <head>
-                <style>
-                  body.this-is-an-embedded-asset {
-                    background: blue;
-                  }
-                </style>
-                <link rel="stylesheet" href="/style.css">
-              </head>
-              <body>
-                body
-              </body>
-            </html>
-          `,
-        },
-        "/style.css": {
-          content: `
-            @import 'reset.css'
-          `,
-        },
-        "/reset.css": {
-          content: `
-            @import 'not-triggered.css';
-
-            body {
-              margin: 0;
-            }
-          `,
-        },
-        "/not-triggered.css": {
-          content: `I am not triggered since I'm not dependent on reset.css`,
-        },
-      },
-    });
-
-    const manager = tape.dev();
-
-    manager.on("update", (updatedIds) => {
-      expect(updatedIds).toHaveLength(1);
-    });
-
-    let first = true;
-    manager.on("end", async () => {
-      if (first) {
-        first = false;
-        tape.update({
-          files: {
-            "/reset.css": {
-              content: `updated`,
-            },
-          },
-        });
-      } else {
-        expect(onChange).toHaveBeenCalledTimes(4);
-        await manager.close();
-        done();
-      }
-    });
   });
 });

@@ -37,25 +37,34 @@ test("html plugin should ignore whitespace", async () => {
   expect(results).toMatchSnapshot();
 });
 
-test.skip("html plugin should collect assets even if there aren't quotes around the attribute value", async () => {
-  const config = {
-    entry: "/my-image.html",
-    files: {
-      "/my-image.html": {
-        content: `<img src=my-image.png />`,
+test("html plugin should collect assets even if there aren't quotes around the attribute value", async () => {
+  await expect(
+    tape({
+      entry: "/my-image.html",
+      files: {
+        "/my-image.html": {
+          content: `<img src=my-image.png />`,
+        },
+        "/should-be-slash.html": {
+          content: `<img src= />`,
+        },
       },
-      "/should-be-slash.html": {
-        content: `<img src= />`,
+    })
+  ).rejects.toThrow(/my-image\.png/);
+
+  await expect(
+    tape({
+      entry: "/should-be-slash.html",
+      files: {
+        "/my-image.html": {
+          content: `<img src=my-image.png />`,
+        },
+        "/should-be-slash.html": {
+          content: `<img src= />`,
+        },
       },
-    },
-  };
-
-  const tape = new Tape(config);
-  await expect(tape()).rejects.toThrow(/my-image\.png/);
-
-  tape.update({ entry: "/should-be-slash.html" });
-
-  await expect(tape()).rejects.toThrow(/\//);
+    })
+  ).rejects.toThrow(/\//);
 });
 
 test("html plugin can ignore missing assets", async () => {

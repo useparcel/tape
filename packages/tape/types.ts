@@ -17,7 +17,6 @@ export type Asset = {
 export type AssetContext = {
   asset: Asset;
   report: Reporter;
-  cache;
   addDependency: ({ id, path }) => void;
   resolveAsset: ({ id, path }) => string;
   getAssetContent: ({ id, path }) => string;
@@ -36,29 +35,24 @@ export type Plugin = {
   name: string;
   exts?: string[];
   transform?: (
-    context: Pick<AssetContext, "asset" | "report" | "cache" | "addDependency">
+    context: Pick<AssetContext, "asset" | "report" | "addDependency">
   ) => Promise<Asset | Asset[]>;
   package?: (
     context: Pick<
       AssetContext,
-      "asset" | "report" | "cache" | "resolveAsset" | "getAssetContent"
+      "asset" | "report" | "resolveAsset" | "getAssetContent"
     >
   ) => Promise<Asset>;
   optimize?: (
     context: Pick<
       AssetContext,
-      "asset" | "report" | "cache" | "resolveAsset" | "getAssetContent"
+      "asset" | "report" | "resolveAsset" | "getAssetContent"
     >
   ) => Promise<Asset>;
   write?: (
-    context: Pick<
-      AssetContext,
-      "asset" | "report" | "cache" | "getAssetContent"
-    >
+    context: Pick<AssetContext, "asset" | "report" | "getAssetContent">
   ) => Promise<string>;
-  onChange?: (
-    context: Pick<AssetContext, "asset" | "report" | "cache">
-  ) => Promise<void>;
+  onChange?: (context: Pick<AssetContext, "asset" | "report">) => Promise<void>;
   cleanup?: (context: Pick<AssetContext, "report">) => Promise<void>;
 };
 
@@ -81,12 +75,9 @@ export type Diagnostic = {
   };
 };
 
-export type Cache = Map<string, any>;
-
 export type Config = {
   entry: string;
   files: FileLoader | { [file: string]: { content: string } | null };
   plugins?: PluginLoader[];
-  // cache?: Cache;
   signal?: AbortSignal;
 };

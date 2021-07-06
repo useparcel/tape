@@ -16,7 +16,6 @@ import {
   uniq,
   isPlainObject,
   isArray,
-  memoize,
 } from "lodash";
 import { DepGraph as Graph } from "dependency-graph";
 import { extname, dirname, basename, resolve as resolvePath } from "path";
@@ -24,7 +23,7 @@ import md5 from "md5";
 import HTMLPlugin from "@useparcel/tape-html";
 import CSSPlugin from "@useparcel/tape-css";
 import isValidFilename from "valid-filename";
-import { generateReporter, addReporterContext, Reporter } from "./reporter";
+import { generateReporter, addReporterContext } from "./reporter";
 import WritePlugin from "./default-write-plugin";
 import {
   Asset,
@@ -57,7 +56,6 @@ tape.dispose = function (config: Config) {
 };
 
 class Tape {
-  #cache = new Map();
   #idToPathMap = {};
   plugins: Plugin[];
   entry: string;
@@ -480,7 +478,7 @@ class Tape {
   async #transformAsset({
     asset,
     ...props
-  }: Omit<Parameters<Plugin["transform"]>[0], "cache">): Promise<Asset[]> {
+  }: Parameters<Plugin["transform"]>[0]): Promise<Asset[]> {
     let transformingAsset = { ...asset };
     let generatedAssets = [];
 
@@ -542,7 +540,7 @@ class Tape {
   async #packageAsset({
     asset,
     ...props
-  }: Omit<Parameters<Plugin["package"]>[0], "cache">): Promise<Asset> {
+  }: Parameters<Plugin["package"]>[0]): Promise<Asset> {
     let packagingAsset = { ...asset };
 
     const plugins = this.plugins.filter((plugin) =>
@@ -565,7 +563,7 @@ class Tape {
   async #optimizeAsset({
     asset,
     ...props
-  }: Omit<Parameters<Plugin["optimize"]>[0], "cache">): Promise<Asset> {
+  }: Parameters<Plugin["optimize"]>[0]): Promise<Asset> {
     let optimizingAsset = { ...asset };
 
     const plugins = this.plugins.filter((plugin) =>
@@ -587,7 +585,7 @@ class Tape {
   async #writeAsset({
     asset,
     ...props
-  }: Omit<Parameters<Plugin["write"]>[0], "cache">): Promise<string> {
+  }: Parameters<Plugin["write"]>[0]): Promise<string> {
     // we add a default write plugin so we always have one
     let plugin = this.plugins.find((plugin) =>
       shouldRunPlugin(plugin, "write", asset.ext)
@@ -602,11 +600,10 @@ class Tape {
   #runPlugin<T extends PluginMethod>(
     plugin: Plugin,
     method: T,
-    { report, ...props }: Omit<Parameters<Plugin[T]>[0], "cache">
+    { report, ...props }: Parameters<Plugin[T]>[0]
   ): ReturnType<Plugin[T]> {
     try {
       return plugin[method]({
-        cache: cacheNamespace(this.#cache, plugin.name),
         report: addReporterContext(report, { source: plugin.name }),
         ...props,
       } as any) as ReturnType<Plugin[T]>;
@@ -709,21 +706,6 @@ function validateGivenFile(file) {
   }
 
   throw new Error(`Given an invalid file: ${JSON.stringify(file)}`);
-}
-
-/**
- * Creates namespaced access to a cache
- */
-function cacheNamespace(cache: Map<string, any>, namespace: string) {
-  const prefix = `${namespace}:`;
-  return {
-    get: (key: string) => cache.get(`${prefix}${key}`),
-    set: (key: string, value: any) => cache.set(`${prefix}${key}`, value),
-    has: (key: string) => cache.has(`${prefix}${key}`),
-    delete: (key: string) => cache.delete(`${prefix}${key}`),
-    entries: () =>
-      [...cache.entries()].filter(([key]) => key.startsWith(prefix)),
-  };
 }
 
 /**
