@@ -35,9 +35,10 @@ import {
   PluginMethod,
   Diagnostic,
   FileLoader,
+  Results,
 } from "./types";
 
-export function tape(config: Config) {
+export function tape(config: Config): Promise<Results> {
   const instance = new Tape(config);
 
   return new Promise((resolve, reject) => {
@@ -49,7 +50,7 @@ export function tape(config: Config) {
   });
 }
 
-tape.dispose = function (config: Config) {
+tape.dispose = function (config: Config): Promise<void> {
   const instance = new Tape(config);
 
   return instance.dispose();
@@ -117,7 +118,7 @@ class Tape {
     }
   }
 
-  async build() {
+  async build(): Promise<Results> {
     const results = await this.#compile();
 
     return pick(results, ["entry", "files", "diagnostics"]);

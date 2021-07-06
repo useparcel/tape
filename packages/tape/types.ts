@@ -81,3 +81,13 @@ export type Config = {
   plugins?: PluginLoader[];
   signal?: AbortSignal;
 };
+
+export type Results = {
+  diagnostics: Diagnostic[];
+  entry: string;
+  files: {
+    [path: string]: {
+      content: string;
+    };
+  };
+};

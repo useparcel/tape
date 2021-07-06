@@ -3,6 +3,7 @@
   "version": "0.4.2",
   "description": "A browser-based HTML build tool",
   "main": "dist/index.js",
+  "types": "./index.d.ts",
   "author": "Avi Goldman <avi@useparcel.com>",
   "license": "MIT",
   "homepage": "https://github.com/useparcel/tape",
