@@ -1,5 +1,5 @@
-import parse from "codsen-parser";
-import { selectAll, selectOne } from "css-select";
+import { cparser as parse } from "codsen-parser";
+import { selectAll } from "css-select";
 import { prepare, adapter } from "css-select-codsen-parser";
 
 // A list of all tags that may produce a dependency

@@ -1,9 +1,9 @@
-import Tape from "../tape/index.js";
+import { tape } from "../tape/index.ts";
 import SassPlugin from "./index.js";
 
 describe("SassPlugin", () => {
   test("should convert an external sass file to css", async () => {
-    const tape = new Tape({
+    const results = await tape({
       entry: "/index.html",
       plugins: [SassPlugin],
       files: {
@@ -31,12 +31,11 @@ describe("SassPlugin", () => {
       },
     });
 
-    const results = await tape.build();
     expect(results).toMatchSnapshot();
   });
 
   test("should convert embedded sass to css", async () => {
-    const tape = new Tape({
+    const results = await tape({
       entry: "/index.html",
       plugins: [SassPlugin],
       files: {
@@ -61,17 +60,17 @@ describe("SassPlugin", () => {
       },
     });
 
-    const results = await tape.build();
     expect(results).toMatchSnapshot();
   });
 
   test("should throw an error with invalid sass", async () => {
-    const tape = new Tape({
-      entry: "/index.html",
-      plugins: [SassPlugin],
-      files: {
-        "/index.html": {
-          content: `
+    await expect(
+      tape({
+        entry: "/index.html",
+        plugins: [SassPlugin],
+        files: {
+          "/index.html": {
+            content: `
             <html>
               <head>
                 <link rel="stylesheet" href="/style.scss">
@@ -81,19 +80,18 @@ describe("SassPlugin", () => {
               </body>
             </html>
           `,
-        },
-        "/style.scss": {
-          content: `
+          },
+          "/style.scss": {
+            content: `
             $my-color: blue // missing a semi-colon
 
             body {
               background: $my-color;
             }
           `,
+          },
         },
-      },
-    });
-
-    await expect(tape.build()).rejects.toThrow();
+      })
+    ).rejects.toThrow();
   });
 });

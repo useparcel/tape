@@ -3,6 +3,7 @@
   "version": "0.4.2",
   "description": "A browser-based HTML build tool",
   "main": "dist/index.js",
+  "types": "./index.d.ts",
   "author": "Avi Goldman <avi@useparcel.com>",
   "license": "MIT",
   "homepage": "https://github.com/useparcel/tape",
@@ -14,10 +15,9 @@
   "dependencies": {
     "@useparcel/tape-css": "^0.4.0",
     "@useparcel/tape-html": "^0.4.2",
-    "dependency-graph": "^0.9.0",
+    "dependency-graph": "^0.11.0",
     "lodash": "^4.17.20",
     "md5": "^2.3.0",
-    "mitt": "^2.1.0",
     "valid-filename": "^3.1.0"
   },
   "publishConfig": {

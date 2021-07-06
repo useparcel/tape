@@ -15,7 +15,7 @@
     "access": "public"
   },
   "dependencies": {
-    "codsen-parser": "^0.8.3",
+    "codsen-parser": "^0.11.0",
     "css-select": "^3.1.1",
     "css-select-codsen-parser": "^0.4.0"
   }

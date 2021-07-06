@@ -1,13 +1,14 @@
-import Tape from "../tape/index.js";
+import { tape } from "../tape/index.ts";
 import CSSPlugin from "./index.js";
 
 describe("CSSPlugin", () => {
   test("should gather imported urls as dependencies", async () => {
-    const tape = new Tape({
-      entry: "/index.html",
-      files: {
-        "/index.html": {
-          content: `
+    await expect(
+      tape({
+        entry: "/index.html",
+        files: {
+          "/index.html": {
+            content: `
             <html>
               <head>
                 <style>
@@ -22,24 +23,24 @@ describe("CSSPlugin", () => {
               </body>
             </html>
           `,
-        },
-        "/style.css": {
-          content: `
+          },
+          "/style.css": {
+            content: `
             @import '/reset.css';
           `,
+          },
         },
-      },
-    });
-
-    await expect(tape.build()).rejects.toThrow(/reset\.css/);
+      })
+    ).rejects.toThrow(/reset\.css/);
   });
 
   test("should gather url('url-in-here') as dependencies", async () => {
-    const tape = new Tape({
-      entry: "/index.html",
-      files: {
-        "/index.html": {
-          content: `
+    await expect(
+      tape({
+        entry: "/index.html",
+        files: {
+          "/index.html": {
+            content: `
             <html>
               <head>
                 <style>
@@ -53,18 +54,17 @@ describe("CSSPlugin", () => {
               </body>
             </html>
           `,
+          },
+          "/found-image.gif": {
+            content: "ok",
+          },
         },
-        "/found-image.gif": {
-          content: "ok",
-        },
-      },
-    });
-
-    await expect(tape.build()).rejects.toThrow(/missing-image\.gif/);
+      })
+    ).rejects.toThrow(/missing-image\.gif/);
   });
 
   test("should ignore absolute urls", async () => {
-    const tape = new Tape({
+    const results = await tape({
       entry: "/index.html",
       files: {
         "/index.html": {
@@ -91,8 +91,6 @@ describe("CSSPlugin", () => {
         },
       },
     });
-
-    const results = await tape.build();
     expect(results).toMatchSnapshot();
   });
 
@@ -120,7 +118,7 @@ describe("CSSPlugin", () => {
      * - url('absolute url')
      * - url('relative url')
      */
-    const tape = new Tape({
+    const results = await tape({
       entry: "/index.html",
       plugins: [writeDifferentUrl],
       files: {
@@ -157,7 +155,6 @@ describe("CSSPlugin", () => {
       },
     });
 
-    const results = await tape.build();
     expect(results).toMatchSnapshot();
   });
 
@@ -172,8 +169,7 @@ describe("CSSPlugin", () => {
       plugins: [[CSSPlugin, { ignoreMissingAssets: true }]],
     };
 
-    const tape = new Tape(config);
-    const results = await tape.build();
+    const results = await tape(config);
     expect(results).toMatchSnapshot();
   });
 });

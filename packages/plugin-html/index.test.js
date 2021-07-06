@@ -1,4 +1,4 @@
-import Tape from "../tape/index.js";
+import { tape } from "../tape/index.ts";
 import HTMLPlugin from "./index.js";
 
 test("html plugin should not collect empty `src` attributes as assets", async () => {
@@ -14,12 +14,11 @@ test("html plugin should not collect empty `src` attributes as assets", async ()
     },
   };
 
-  const tape = new Tape(config);
-  const results = await tape.build();
+  const results = await tape(config);
   expect(results).toMatchSnapshot();
 });
 
-test("html plugin should ignore whitepscape", async () => {
+test("html plugin should ignore whitespace", async () => {
   const config = {
     entry: "/index.html",
     files: {
@@ -34,30 +33,38 @@ test("html plugin should ignore whitepscape", async () => {
     },
   };
 
-  const tape = new Tape(config);
-  const results = await tape.build();
+  const results = await tape(config);
   expect(results).toMatchSnapshot();
 });
 
 test("html plugin should collect assets even if there aren't quotes around the attribute value", async () => {
-  const config = {
-    entry: "/my-image.html",
-    files: {
-      "/my-image.html": {
-        content: `<img src=my-image.png />`,
+  await expect(
+    tape({
+      entry: "/my-image.html",
+      files: {
+        "/my-image.html": {
+          content: `<img src=my-image.png />`,
+        },
+        "/should-be-slash.html": {
+          content: `<img src= />`,
+        },
       },
-      "/should-be-slash.html": {
-        content: `<img src= />`,
+    })
+  ).rejects.toThrow(/my-image\.png/);
+
+  await expect(
+    tape({
+      entry: "/should-be-slash.html",
+      files: {
+        "/my-image.html": {
+          content: `<img src=my-image.png />`,
+        },
+        "/should-be-slash.html": {
+          content: `<img src= />`,
+        },
       },
-    },
-  };
-
-  const tape = new Tape(config);
-  await expect(tape.build()).rejects.toThrow(/my-image\.png/);
-
-  tape.update({ entry: "/should-be-slash.html" });
-
-  await expect(tape.build()).rejects.toThrow(/\//);
+    })
+  ).rejects.toThrow(/\//);
 });
 
 test("html plugin can ignore missing assets", async () => {
@@ -71,7 +78,6 @@ test("html plugin can ignore missing assets", async () => {
     plugins: [[HTMLPlugin, { ignoreMissingAssets: true }]],
   };
 
-  const tape = new Tape(config);
-  const results = await tape.build();
+  const results = await tape(config);
   expect(results).toMatchSnapshot();
 });

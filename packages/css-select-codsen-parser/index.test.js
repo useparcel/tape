@@ -1,4 +1,4 @@
-import parse from "codsen-parser";
+import { cparser as parse } from "codsen-parser";
 import { selectAll, selectOne } from "css-select";
 import { prepare, adapter } from "./index.js";
 

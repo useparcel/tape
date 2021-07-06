@@ -11,4 +11,8 @@ module.exports = {
   moduleNameMapper: {
     "(@useparcel/.*)": "$1/index.js",
   },
+  transformIgnorePatterns: [
+    "node_modules/(?!@useparcel/.*).*",
+    "\\.pnp\\.[^\\/]+$",
+  ],
 };

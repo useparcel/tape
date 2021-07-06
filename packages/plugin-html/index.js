@@ -2,7 +2,7 @@ import MagicString from "magic-string";
 import findHTMLDependencies from "find-html-dependencies";
 import findEmbeddedDocuments from "find-embedded-documents";
 import isAbsoluteUrl from "is-absolute-url";
-import parse from "codsen-parser";
+import { cparser as parse } from "codsen-parser";
 
 export default function ({ ignoreMissingAssets = false } = {}) {
   return {

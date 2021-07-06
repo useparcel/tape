@@ -11,7 +11,7 @@
     "directory": "packages/plugin-html"
   },
   "dependencies": {
-    "codsen-parser": "^0.8.3",
+    "codsen-parser": "^0.11.0",
     "find-embedded-documents": "^0.4.0",
     "find-html-dependencies": "^0.4.2",
     "is-absolute-url": "^3.0.3",
