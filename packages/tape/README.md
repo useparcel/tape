@@ -376,7 +376,6 @@ The function should return the absolute path to the file.
 Below we will write the files to the file system. After each write save the absolute path to the cache so on the next build we don't have to rebuild it unless there is a change.
 
 ```js
-
 const fs = require('fs-extra')
 const path = require('path')
 

@@ -22,10 +22,12 @@ import { extname, dirname, basename, resolve as resolvePath } from "path";
 import md5 from "md5";
 import HTMLPlugin from "@useparcel/tape-html";
 import CSSPlugin from "@useparcel/tape-css";
-import { generateReporter, addReportContext } from "./reporter";
-import WritePlugin from "./default-write-plugin";
 import isValidFilename from "valid-filename";
+import { generateReporter, addReporterContext, Reporter } from "./reporter";
+import WritePlugin from "./default-write-plugin";
 import {
+  Asset,
+  AssetContext,
   Plugin,
   PluginLoader,
   Config,
@@ -83,12 +85,13 @@ class Tape {
    *                                  used to skip compiling unchanged files
    */
   async #compile({ context = {} } = {}) {
-    const pathToId = this.#pathToId.bind(this);
+    const self = this;
+    const pathToId = this.#pathToId.bind(self);
 
     /**
      * Set up build context and utils
      */
-    const entryId = pathToId(this.entry);
+    const entryId = pathToId(self.entry);
     let {
       graph,
       transformedAssets,
@@ -103,26 +106,80 @@ class Tape {
       diagnostics: [],
     });
 
-    function addDependency({ asset, id, path, dir }) {
+    /**
+     * Registers an asset dependency
+     *
+     * Must provide either `id` or `path` and `dir`
+     */
+    function addDependency({
+      asset,
+      id,
+      path,
+      dir,
+    }: {
+      asset: Asset;
+      id?: string;
+      path?: string;
+      dir?: string;
+    }) {
       id = id || pathToId(path, dir);
 
       graph.addNode(id);
       graph.addDependency(asset.id, id);
     }
 
-    function resolveAsset({ id, path, dir }) {
+    /**
+     * Resolves an asset to it's write path
+     *
+     * Must provide either `id` or `path` and `dir`
+     */
+    function resolveAsset({
+      id,
+      path,
+      dir,
+    }: {
+      id?: string;
+      path?: string;
+      dir?: string;
+    }) {
       id = id || pathToId(path, dir);
 
       return resolveMap[id];
     }
 
-    function getSourceAssetContent({ id, path, dir }) {
+    /**
+     * Get the original content of an asset
+     *
+     * Must provide either `id` or `path` and `dir`
+     */
+    function getSourceAssetContent({
+      id,
+      path,
+      dir,
+    }: {
+      id?: string;
+      path?: string;
+      dir?: string;
+    }) {
       id = id || pathToId(path, dir);
 
-      return this.files[id].content;
+      return self.files[id].content;
     }
 
-    function getPackagedAssetContent({ id, path, dir }) {
+    /**
+     * Get the package content of an asset
+     *
+     * Must provide either `id` or `path` and `dir`
+     */
+    function getPackagedAssetContent({
+      id,
+      path,
+      dir,
+    }: {
+      id?: string;
+      path?: string;
+      dir?: string;
+    }) {
       id = id || pathToId(path, dir);
 
       return packagedAssets[id].content;
@@ -130,8 +187,19 @@ class Tape {
 
     const report = generateReporter();
 
-    const generateAssetContext = (asset, fields) => {
-      const context = pick(
+    const generateAssetContext = (
+      asset: Asset,
+      fields: (
+        | "addDependency"
+        | "resolveAsset"
+        | "getSourceAssetContent"
+        | "getPackagedAssetContent"
+      )[]
+    ) => {
+      const context: Partial<AssetContext> & {
+        getSourceAssetContent?: ({ id, path }) => string;
+        getPackagedAssetContent?: ({ id, path }) => string;
+      } = pick(
         {
           asset,
           addDependency: ({ id, path }) =>
@@ -142,7 +210,7 @@ class Tape {
             getSourceAssetContent({ id, path, dir: asset.source.dir }),
           getPackagedAssetContent: ({ id, path }) =>
             getPackagedAssetContent({ id, path, dir: asset.source.dir }),
-          report: addReportContext(report, { path: asset.source.path }),
+          report: addReporterContext(report, { path: asset.source.path }),
         },
         ["asset", "report", ...fields]
       );
@@ -161,13 +229,17 @@ class Tape {
         delete context.getPackagedAssetContent;
       }
 
-      return context;
+      return context as
+        | Pick<AssetContext, "asset" | "report">
+        | Partial<AssetContext>;
     };
 
     /********************************
      * Transform
      *******************************/
-    let assets = cloneDeep(omit(this.files, keys(transformedAssets)));
+    let assets: { [path: string]: Asset } = cloneDeep(
+      omit(this.files, keys(transformedAssets))
+    );
 
     if (has(assets, entryId)) {
       assets[entryId].isEntry = true;
@@ -197,10 +269,10 @@ class Tape {
         if (graph.hasNode(id)) graph.setNodeData(id, { missing: true });
 
         const path = this.#idToPath(id);
-        const error = new Error(`Transforming: Asset \`${path}\` not found.`);
-        error.path = path;
-
-        throw error;
+        report.error({
+          message: `Transforming: Asset \`${path}\` not found.`,
+          path,
+        });
       }
 
       /**
@@ -255,9 +327,10 @@ class Tape {
       const asset = transformedAssets[id];
       if (!asset) {
         const path = this.#idToPath(id);
-        const error = new Error(`Packaging: Asset ${path} not found.`);
-        error.path = path;
-        throw error;
+        report.error({
+          message: `Packaging: Asset ${path} not found.`,
+          path,
+        });
       }
 
       /**
@@ -314,18 +387,6 @@ class Tape {
         diagnostics,
       },
     };
-  }
-
-  /**
-   * Runs the cleanup function of all plugins
-   * @return {[type]} [description]
-   */
-  async #cleanup(props) {
-    const plugins = this.plugins.filter((plugin) => isFunction(plugin.cleanup));
-
-    for (const plugin of plugins) {
-      await this.#runPlugin(plugin, "cleanup", props);
-    }
   }
 
   /**
@@ -442,33 +503,23 @@ class Tape {
   }
 
   /**
-   * Runs the asset through the onChange plugins
-   */
-  async #onChangeAsset({ asset, ...props }) {
-    const plugins = this.plugins.filter((plugin) =>
-      shouldRunPlugin(plugin, "onChange", asset.ext)
-    );
-    for (let plugin of plugins) {
-      await this.#runPlugin(plugin, "onChange", { asset, ...props });
-    }
-  }
-
-  /**
    * Runs the given method of a plugin within the plugin namespace
    */
-  async #runPlugin(plugin: Plugin, method: PluginMethod, { report, ...props }) {
+  #runPlugin<T extends PluginMethod>(
+    plugin: Plugin,
+    method: T,
+    { report, ...props }: Parameters<Plugin["transform"]>[0]
+  ): ReturnType<Plugin[T]> {
     try {
-      return await plugin[method]({
+      return plugin[method]({
         cache: cacheNamespace(this.#cache, plugin.name),
-        report: addReportContext(report, { source: plugin.name }),
+        report: addReporterContext(report, { source: plugin.name }),
         ...props,
-      });
+      } as any) as ReturnType<Plugin[T]>;
     } catch (e) {
       if (e.diagnostic) {
         throw e;
       }
-
-      console.log(e);
 
       report({
         source: plugin.name,
@@ -603,8 +654,6 @@ function shouldRunPlugin(plugin, method, ext) {
  */
 function newGraph() {
   const graph = new Graph();
-  graph.directDependenciesOf = (name) => get(graph.outgoingEdges, name, []);
-  graph.directDependantsOf = (name) => get(graph.incomingEdges, name, []);
 
   return graph;
 }

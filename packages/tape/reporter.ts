@@ -1,6 +1,13 @@
 import { has, cloneDeep, pick, isPlainObject } from "lodash";
 import { Diagnostic } from "./types";
 
+export type Reporter = ((diagnostic: Diagnostic) => void) & {
+  error: (diagnostic: Diagnostic) => void;
+  warning: (diagnostic: Diagnostic) => void;
+  info: (diagnostic: Diagnostic) => void;
+  release: () => Diagnostic[];
+};
+
 interface DiagnosticError extends Error {
   diagnostic?: Diagnostic;
 }
@@ -8,7 +15,7 @@ interface DiagnosticError extends Error {
 /**
  * Returns a diagnostic reporter
  */
-export function generateReporter() {
+export function generateReporter(): Reporter {
   let diagnostics = [];
 
   /**
@@ -79,13 +86,13 @@ export function generateReporter() {
 
   report.release = () => diagnostics;
 
-  return addReportContext(report, {});
+  return addReporterContext(report, {});
 }
 
 /**
  * Adds parts the diagnostic to all future report
  */
-export function addReportContext(
+export function addReporterContext(
   report: ((diagnostic: Diagnostic) => void) & {
     error?: (diagnostic: Diagnostic) => void;
     warning?: (diagnostic: Diagnostic) => void;
@@ -93,7 +100,7 @@ export function addReportContext(
     release: () => Diagnostic[];
   },
   context: Partial<Diagnostic>
-) {
+): Reporter {
   const newReport = function (diagnostic: Diagnostic) {
     return report({ ...diagnostic, ...context });
   };
