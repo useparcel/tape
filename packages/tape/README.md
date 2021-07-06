@@ -465,41 +465,46 @@ It takes an object with the following properties:
 * line (`Number`) - The 1-indexed line of the end of the problem.
 * column (`Number`) - The 1-indexed column of the end of the problem.
 * fix (`String` | optional) - The string to replace the given location in order to resolve the problem.
+
+It also had 3 shortcuts for reporting: 
+* `report.info(diagnostic)`
+* `report.warning(diagnostic)`
+* `report.error(diagnostic)`
   
 Here we will add an `info` diagnostic report for when the cache missed in our `write-fs` plugin.
 
 ```js
-const  fs  =  require('fs-extra')
+const fs = require('fs-extra')
 
-function  writeFSPlugin({ buildDir }) {
-return {
-name: 'write-fs',
-async  write({ asset, cache, report }) {
-if (cache.has(asset.path)) {
-return  cache.get(asset.path)
+function writeFSPlugin({ buildDir }) {
+  return {
+    name: 'write-fs',
+    async write({ asset, cache, report }) {
+      if (cache.has(asset.path)) {
+        return  cache.get(asset.path)
+      }
+  
+      // Report the cache missed
+      report({
+        type: 'info',
+        message: 'No cache was found. Writing to file system.'
+      })
+
+
+      const dir = path.join(buildDir, asset.dir)
+      const absolutePath = path.join(dir, `${asset.name}${asset.ext}`)
+
+      await fs.ensureDir(dir)
+      await fs.write(absolutePath, asset.content)
+      cache.set(asset.path, absolutePath)
+
+      return absolutePath;
+    }
+
+    async onChange() {...},
+    async cleanup({ env }) {...}
+  }
 }
- 
-// Report the cache missed
-report({
-  type: 'info',
-  message: 'No cache was found. Writing to file system.'
-})
-
-const dir = path.join(buildDir, asset.dir)
-const absolutePath = path.join(dir, `${asset.name}${asset.ext}`)
-
-await fs.ensureDir(dir)
-await fs.write(absolutePath, asset.content)
-cache.set(asset.path, absolutePath)
-
-return absolutePath;
-}
-
-async  onChange() {...},
-async  cleanup({ env }) {...}
-}
-}
-
 ```
 
 ## Definitions

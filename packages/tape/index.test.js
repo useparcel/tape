@@ -624,7 +624,7 @@ describe("plugin system", () => {
     expect(plugin).toHaveBeenCalledWith("config goes here");
   });
 
-  test("[build] runs all transform functions", async () => {
+  test("runs all transform functions", async () => {
     // run only on txt (0 times)
     const transform1 = jest.fn(({ asset }) => asset);
     const transformPlugin1 = () => ({
@@ -673,7 +673,7 @@ describe("plugin system", () => {
     expect(transform3).toHaveBeenCalledTimes(3);
   });
 
-  test("[build] runs all package plugins (no exts)", async () => {
+  test("runs all package plugins (no exts)", async () => {
     const package1 = jest.fn(({ asset }) => asset);
     const packagePlugin1 = () => ({
       name: "packagePlugin1",
@@ -703,7 +703,7 @@ describe("plugin system", () => {
     expect(package2).toHaveBeenCalledTimes(2);
   });
 
-  test("[build] runs just the first package plugin (with exts)", async () => {
+  test("runs just the first package plugin (with exts)", async () => {
     const package1 = jest.fn(({ asset }) => asset);
     const packagePlugin1 = () => ({
       name: "packagePlugin1",
@@ -734,7 +734,7 @@ describe("plugin system", () => {
     expect(package2).toHaveBeenCalledTimes(2);
   });
 
-  test("[build] runs all optimizer functions", async () => {
+  test("runs all optimizer functions", async () => {
     const optimizer1 = jest.fn(({ asset }) => asset);
     const optimizerPlugin1 = () => ({
       name: "optimizerPlugin1",
@@ -766,7 +766,7 @@ describe("plugin system", () => {
     expect(optimizer2).toHaveBeenCalledTimes(1);
   });
 
-  test("[build] runs just the first write plugin", async () => {
+  test("runs just the first write plugin", async () => {
     const write1 = jest.fn();
     const writePlugin1 = () => ({
       name: "writePlugin1",
@@ -788,7 +788,7 @@ describe("plugin system", () => {
     expect(write2).toHaveBeenCalledTimes(0);
   });
 
-  test("[build] runs all clean up functions", async () => {
+  test("should not run clean up functions", async () => {
     const cleanup1 = jest.fn();
     const cleanupPlugin1 = () => ({
       name: "cleanupPlugin1",
@@ -805,8 +805,45 @@ describe("plugin system", () => {
       plugins: [cleanupPlugin1, cleanupPlugin2],
     });
 
-    expect(cleanup1).toHaveBeenCalled();
-    expect(cleanup2).toHaveBeenCalled();
+    expect(cleanup1).toHaveBeenCalledTimes(0);
+    expect(cleanup2).toHaveBeenCalledTimes(0);
+  });
+
+  test("returns all diagnostics", async () => {
+    function reportStage(stage) {
+      return ({ asset, report }) => {
+        report({
+          type: "warning",
+          message: `In stage: ${stage}`,
+        });
+
+        report.info({
+          message: `In stage using shortcut: ${stage}`,
+        });
+        return asset;
+      };
+    }
+    const reportStages = () => ({
+      name: "reportStages",
+      transform: reportStage("transform"),
+      package: reportStage("package"),
+      optimize: reportStage("optimize"),
+      write: reportStage("write"),
+    });
+
+    const { diagnostics } = await tape({
+      entry: "/index.html",
+      files: {
+        "/index.html": {
+          content: `
+            just html
+          `,
+        },
+      },
+      plugins: [reportStages],
+    });
+
+    expect(diagnostics).toHaveLength(8);
   });
 
   test.skip("[dev] should trigger onChange on dependents and embedded dependencies", async (done) => {

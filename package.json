@@ -30,7 +30,7 @@
     "lint-staged": "^10.5.0",
     "parcel-bundler": "^1.12.4",
     "path-browserify": "^1.0.1",
-    "prettier": "^2.1.2",
+    "prettier": "^2.3.2",
     "process": "^0.11.10",
     "source-map-support": "^0.5.19",
     "stream-browserify": "^3.0.0",
@@ -68,5 +68,9 @@
       "pre-commit": "lint-staged",
       "pre-push": "npm test"
     }
+  },
+  "dependencies": {
+    "@types/lodash": "^4.14.170",
+    "@types/md5": "^2.3.0"
   }
 }

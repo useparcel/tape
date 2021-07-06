@@ -20,28 +20,31 @@ import {
 import { DepGraph as Graph } from "dependency-graph";
 import { extname, dirname, basename, resolve as resolvePath } from "path";
 import md5 from "md5";
-import mitt from "mitt";
 import HTMLPlugin from "@useparcel/tape-html";
 import CSSPlugin from "@useparcel/tape-css";
+import { generateReporter, addReportContext } from "./reporter";
 import WritePlugin from "./default-write-plugin";
 import isValidFilename from "valid-filename";
+import {
+  Plugin,
+  PluginLoader,
+  Config,
+  PluginConstructor,
+  PluginMethod,
+} from "./types";
 
-type Plugin = {};
-type PluginConstructor = (config?: any) => Plugin;
-type FileGetter = (path: string) => { content: string };
+export function tape(config: Config) {
+  const instance = new Tape(config);
 
-type Config = {
-  plugins: PluginConstructor[];
-  entry: string;
-  files: FileGetter | { [file: string]: { content: string } | null };
-};
+  return instance.build();
+}
 
 class Tape {
   #cache = new Map();
-  #emitter = mitt();
   #idToPathMap = {};
-  pendingUpdates = [];
-  isCompiling = false;
+  plugins: Plugin[];
+  entry: string;
+  files: { [file: string]: { content: string } | null };
 
   constructor(config: Config) {
     const { plugins, entry, files } = config || {};
@@ -69,54 +72,18 @@ class Tape {
   }
 
   async build() {
-    const context = { env: "production" };
-    this.isCompiling = true;
-    const results = await this.#compile(context);
+    const results = await this.#compile();
 
-    const report = generateReporter();
-    await this.#cleanup({
-      ...context,
-      report,
-    });
-
-    this.isCompiling = false;
-
-    return pick(
-      {
-        ...results,
-        diagnostics: [...results.diagnostics, ...report.release()],
-      },
-      ["entry", "files", "diagnostics"]
-    );
-  }
-
-  /**
-   * Runs the cleanup function of all plugins
-   * @return {[type]} [description]
-   */
-  async #cleanup(props) {
-    const plugins = this.plugins.filter((plugin) => isFunction(plugin.cleanup));
-
-    for (const plugin of plugins) {
-      await this.#runPlugin(plugin, "cleanup", props);
-    }
+    return pick(results, ["entry", "files", "diagnostics"]);
   }
 
   /**
    * Does the full compliation
-   * @param  {string} options.env     either `production` or `development`
-   *                                  development has a consistent cache while
-   *                                  production doesn't use a cache
    * @param  {Object} options.context The previous context of a compliation
    *                                  used to skip compiling unchanged files
    */
-  async #compile({ env, context = {} }) {
+  async #compile({ context = {} } = {}) {
     const pathToId = this.#pathToId.bind(this);
-    if (!env || !["development", "production"].includes(env)) {
-      throw new Error(
-        `Expected env to be \`development\` or \`production\`. Received "${env}".`
-      );
-    }
 
     /**
      * Set up build context and utils
@@ -167,7 +134,6 @@ class Tape {
       const context = pick(
         {
           asset,
-          env,
           addDependency: ({ id, path }) =>
             addDependency({ asset, id, path, dir: asset.source.dir }),
           resolveAsset: ({ id, path }) =>
@@ -176,14 +142,9 @@ class Tape {
             getSourceAssetContent({ id, path, dir: asset.source.dir }),
           getPackagedAssetContent: ({ id, path }) =>
             getPackagedAssetContent({ id, path, dir: asset.source.dir }),
-          report: (diagnostic) => {
-            report({
-              ...diagnostic,
-              path: asset.source.path,
-            });
-          },
+          report: addReportContext(report, { path: asset.source.path }),
         },
-        ["asset", "env", "report", ...fields]
+        ["asset", "report", ...fields]
       );
 
       /**
@@ -356,6 +317,18 @@ class Tape {
   }
 
   /**
+   * Runs the cleanup function of all plugins
+   * @return {[type]} [description]
+   */
+  async #cleanup(props) {
+    const plugins = this.plugins.filter((plugin) => isFunction(plugin.cleanup));
+
+    for (const plugin of plugins) {
+      await this.#runPlugin(plugin, "cleanup", props);
+    }
+  }
+
+  /**
    * Runs the asset through transformer plugins
    *
    * Transformers are responsible for converting syntaxes (i.e. mjml to html) as
@@ -483,15 +456,11 @@ class Tape {
   /**
    * Runs the given method of a plugin within the plugin namespace
    */
-  async #runPlugin(plugin, method, { env, report, ...props }) {
+  async #runPlugin(plugin: Plugin, method: PluginMethod, { report, ...props }) {
     try {
       return await plugin[method]({
-        env,
-        cache: cacheNamespace(
-          env === "development" ? this.#cache : new Map(),
-          plugin.name
-        ),
-        report: (diagnostic) => report({ ...diagnostic, source: plugin.name }),
+        cache: cacheNamespace(this.#cache, plugin.name),
+        report: addReportContext(report, { source: plugin.name }),
         ...props,
       });
     } catch (e) {
@@ -512,7 +481,7 @@ class Tape {
   /**
    * Converts a file path into a consistent id
    */
-  #pathToId(path, dir = "/") {
+  #pathToId(path: string, dir = "/") {
     const absolutePath = resolvePath(dir, path);
 
     const id = md5(absolutePath);
@@ -523,7 +492,7 @@ class Tape {
   /**
    * Converts a path to an id
    */
-  #idToPath(id) {
+  #idToPath(id: string) {
     return get(this.#idToPathMap, id, id);
   }
 
@@ -548,12 +517,6 @@ class Tape {
   }
 }
 
-export function tape(config) {
-  const instance = new Tape(config);
-
-  return instance.build();
-}
-
 /**
  * Given a value, it forces it to be a compact array
  *
@@ -561,25 +524,24 @@ export function tape(config) {
  * ['a','b', 'c'] -> ['a', 'b', 'c']
  * undefined -> []
  */
-function forceArray(value) {
+function forceArray(value: any): any[] {
   return compact(castArray(value));
 }
 
 /**
  * Checks if the given value is falsey
  */
-function isFalsy(value) {
+function isFalsy(value: any): boolean {
   return !value || isEmpty(value);
 }
 
 /**
  * Validates a string is a valid path or throws an error
  */
-function validatePath(path) {
+function validatePath(path: string): true {
   for (let part of compact(path.split("/"))) {
     if (!isValidFilename(part)) {
       const error = new Error(`"${path}" is an invalid file path.`);
-      error.path = path;
       throw error;
     }
   }
@@ -650,7 +612,7 @@ function newGraph() {
 /**
  * Returns a string preview of the given variable
  */
-function variablePreview(v) {
+function variablePreview(v: any): string {
   try {
     const str = JSON.stringify(v, null);
     return `${str.slice(0, 50)}${str.length > 50 ? "..." : ""}`;
@@ -662,29 +624,29 @@ function variablePreview(v) {
 /**
  * Set default plugins
  */
-function loadPlugins(pluginLoaders) {
+function loadPlugins(pluginLoaders: PluginLoader[]) {
   pluginLoaders = [...pluginLoaders];
 
   let plugins = [];
   for (let input of pluginLoaders) {
-    let pluginLoader,
+    let pluginContructor: PluginConstructor,
       config = {};
     if (isArray(input)) {
-      pluginLoader = get(input, 0);
+      pluginContructor = get(input, 0);
       config = get(input, 1, {});
     } else {
-      pluginLoader = input;
+      pluginContructor = input;
     }
 
-    if (!isFunction(pluginLoader)) {
+    if (!isFunction(pluginContructor)) {
       throw new Error(
-        `Invalid plugin. Expected function, given ${typeof pluginLoader} (${variablePreview(
-          plugin
+        `Invalid plugin. Expected function, given ${typeof pluginContructor} (${variablePreview(
+          pluginContructor
         )}).`
       );
     }
 
-    const plugin = pluginLoader(config);
+    const plugin = pluginContructor(config);
 
     if (!isPlainObject(plugin)) {
       throw new Error(
@@ -710,90 +672,16 @@ function loadPlugins(pluginLoaders) {
   }
 
   return [
+    // force HTML support
     ...(plugins.find(({ name }) => name === "@useparcel/tape-html")
       ? []
       : [HTMLPlugin()]),
+    // force CSS support
     ...(plugins.find(({ name }) => name === "@useparcel/tape-css")
       ? []
       : [CSSPlugin()]),
     ...plugins,
+    // if no write plugin is given, add in the default one
     ...(plugins.find(({ write }) => isFunction(write)) ? [] : [WritePlugin]),
   ];
-}
-
-/**
- * Returns a reporter for plugins
- */
-function generateReporter() {
-  let diagnostics = [];
-
-  /**
-   * diagnostic = {
-   *   type               Enum(error | warning | info)
-   *   source             String - Plugin source
-   *   message            String - General explanation of the error
-   *   path               String - The file path
-   *   loc.start.line     Number - the 1-indexed line of the start of the problem
-   *   loc.start.column   Number - the 1-indexed column of the start of the problem
-   *   loc.end.line       Number - the 1-indexed line of the end of the problem
-   *   loc.end.column     Number - the 1-indexed column of the end of the problem
-   *   fix                String - the string to replace the given location to fix the problem
-   * }
-   */
-  function report(diagnostic) {
-    diagnostic = pick(
-      {
-        type: "error",
-        source: "internal",
-        message: "An unknown error occurred.",
-        path: null,
-        ...diagnostic,
-      },
-      [
-        "type",
-        "source",
-        "message",
-        "path",
-        "loc.start.line",
-        "loc.start.column",
-        "loc.end.line",
-        "loca.end.column",
-        "fix",
-      ]
-    );
-
-    /**
-     * Clean up bad location data
-     */
-    if (
-      diagnostic.loc &&
-      (!isPlainObject(diagnostic.loc) ||
-        !(
-          has(diagnostic, "loc.start.line") &&
-          has(diagnostic, "loc.start.column")
-        ))
-    ) {
-      delete diagnostic.loc;
-    }
-
-    /**
-     * Clean up bad diagonstic type
-     */
-    if (!["error", "warning", "info"].includes(diagnostic.type)) {
-      diagnostic.type = "error";
-    }
-
-    if (diagnostic.type === "error") {
-      const error = new Error(diagnostic.message);
-      error.diagnostic = diagnostic;
-
-      throw error;
-    }
-
-    diagnostics.push(diagnostic);
-  }
-
-  report.release = () => diagnostics;
-
-  return report;
 }
