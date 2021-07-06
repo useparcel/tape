@@ -597,6 +597,54 @@ describe.skip("update", () => {
   });
 });
 
+describe("abort controller", () => {
+  test("should immediately error the build", () => {
+    const controller = new AbortController();
+    controller.abort();
+    expect(() =>
+      tape({ ...validConfig, signal: controller.signal })
+    ).toThrowError(/abort/i);
+  });
+
+  test("should error and stop the build when it is in progress", async () => {
+    const controller = new AbortController();
+    const packageFn = jest.fn(({ asset }) => asset);
+    const packagePlugin = () => ({
+      name: "packagePlugin",
+      package: packageFn,
+    });
+
+    setTimeout(() => {
+      controller.abort();
+    }, 250);
+
+    await expect(
+      tape({
+        ...validConfig,
+        files: function (path) {
+          return new Promise((resolve) => {
+            setTimeout(() => resolve(validConfig.files[path]), 500);
+          });
+        },
+        plugins: [packagePlugin],
+        signal: controller.signal,
+      })
+    ).rejects.toThrow(/abort/i);
+
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    expect(packageFn).toHaveBeenCalledTimes(0);
+  });
+
+  test("should not do anything if the build finished", async () => {
+    const controller = new AbortController();
+    const results = await tape({ ...validConfig, signal: controller.signal });
+    controller.abort();
+
+    expect(results).toMatchSnapshot();
+  });
+});
+
 describe("plugin system", () => {
   test("loads plugins with the given config", async () => {
     // run only on txt (0 times)

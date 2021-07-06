@@ -41,7 +41,13 @@ import {
 export function tape(config: Config) {
   const instance = new Tape(config);
 
-  return instance.build();
+  return new Promise((resolve, reject) => {
+    config?.signal?.addEventListener("abort", () => {
+      reject(new Error("Aborted"));
+    });
+
+    instance.build().then(resolve).catch(reject);
+  });
 }
 
 tape.dispose = function (config: Config) {
@@ -57,6 +63,7 @@ class Tape {
   entry: string;
   assets: { [id: string]: Asset } = {};
   assetLoader: (path: string) => Promise<Asset>;
+  signal: AbortSignal;
 
   constructor(config: Config) {
     const { plugins, entry, files } = config || {};
@@ -78,6 +85,7 @@ class Tape {
 
     this.plugins = loadPlugins(plugins || []);
     this.entry = entry;
+    this.signal = config.signal;
 
     let baseFileLoader: FileLoader;
     if (isFunction(files)) {
@@ -105,6 +113,10 @@ class Tape {
 
       return asset;
     };
+
+    if (this.signal?.aborted) {
+      throw new Error("Aborted");
+    }
   }
 
   async build() {
@@ -303,6 +315,10 @@ class Tape {
     /********************************
      * Transform
      *******************************/
+    if (this.signal?.aborted) {
+      return;
+    }
+
     let dependencies = [entryId];
     while (dependencies.length > 0) {
       const id = dependencies.shift();
@@ -370,6 +386,10 @@ class Tape {
     /********************************
      * Package, optimize, and write
      *******************************/
+    if (this.signal?.aborted) {
+      return;
+    }
+
     const entryDependencies = [entryId, ...graph.dependenciesOf(entryId)];
     const entryGraphOverallOrder = graph
       .overallOrder()

@@ -88,5 +88,5 @@ export type Config = {
   files: FileLoader | { [file: string]: { content: string } | null };
   plugins?: PluginLoader[];
   // cache?: Cache;
-  // signal?: AbortSignal;
+  signal?: AbortSignal;
 };

@@ -1,5 +1,17 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`abort controller should not do anything if the build finished 1`] = `
+Object {
+  "diagnostics": Array [],
+  "entry": "/index.html",
+  "files": Object {
+    "/index.html": Object {
+      "content": "test",
+    },
+  },
+}
+`;
+
 exports[`build should work for a complex example that includes a bunch of dependencies and embedded documents 1`] = `
 Object {
   "diagnostics": Array [],
