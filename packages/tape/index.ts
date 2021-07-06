@@ -453,7 +453,7 @@ class Tape {
             return resolveAsset({ id });
           }
         ),
-        (asset, id) => {
+        (asset) => {
           return {
             content: asset.content,
           };
