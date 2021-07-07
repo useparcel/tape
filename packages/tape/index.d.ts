@@ -1,4 +1,4 @@
-import { Config, Results } from "./types";
+import { Config, Results, PluginConstructor } from "./types";
 /**
  * Builds the HTML for the given configuration.
  */
@@ -10,3 +10,5 @@ export function tape(
    */
   dispose: (config: Config) => Promise<void>;
 };
+
+export type { PluginConstructor as TapePluginConstructor };

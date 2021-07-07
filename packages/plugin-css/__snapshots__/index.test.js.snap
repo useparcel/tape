@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`CSSPlugin can ignore missing assets 1`] = `
+exports[`CSS Plugin can ignore missing assets 1`] = `
 Object {
   "diagnostics": Array [],
   "entry": "/index.css",
@@ -12,7 +12,7 @@ Object {
 }
 `;
 
-exports[`CSSPlugin should for work for this complex example of all the things 1`] = `
+exports[`CSS Plugin should for work for this complex example of all the things 1`] = `
 Object {
   "diagnostics": Array [],
   "entry": "different-base/index.html",
@@ -51,7 +51,7 @@ Object {
 }
 `;
 
-exports[`CSSPlugin should ignore absolute urls 1`] = `
+exports[`CSS Plugin should ignore absolute urls 1`] = `
 Object {
   "diagnostics": Array [],
   "entry": "/index.html",

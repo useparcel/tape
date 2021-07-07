@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`SassPlugin should convert an external sass file to css 1`] = `
+exports[`sass plugin should convert an external sass file to css 1`] = `
 Object {
   "diagnostics": Array [],
   "entry": "/index.html",
@@ -26,7 +26,7 @@ Object {
 }
 `;
 
-exports[`SassPlugin should convert embedded sass to css 1`] = `
+exports[`sass plugin should convert embedded sass to css 1`] = `
 Object {
   "diagnostics": Array [],
   "entry": "/index.html",

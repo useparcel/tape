@@ -1,5 +1,5 @@
 import { tape } from "../tape/index.ts";
-import HTMLPlugin from "./index.js";
+import { html } from "./index.js";
 
 test("html plugin should not collect empty `src` attributes as assets", async () => {
   const config = {
@@ -75,7 +75,7 @@ test("html plugin can ignore missing assets", async () => {
         content: `<img src="my-missing-image.png" />`,
       },
     },
-    plugins: [[HTMLPlugin, { ignoreMissingAssets: true }]],
+    plugins: [[html, { ignoreMissingAssets: true }]],
   };
 
   const results = await tape(config);

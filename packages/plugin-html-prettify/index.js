@@ -1,6 +1,6 @@
 import pretty from "pretty";
 
-export default function (config) {
+export function htmlPrettify(config) {
   return {
     name: "@useparcel/tape-html-prettify",
     exts: [".html"],

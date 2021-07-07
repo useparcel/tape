@@ -4,7 +4,7 @@ import findEmbeddedDocuments from "find-embedded-documents";
 import isAbsoluteUrl from "is-absolute-url";
 import { cparser as parse } from "codsen-parser";
 
-export default function ({ ignoreMissingAssets = false } = {}) {
+export function html({ ignoreMissingAssets = false } = {}) {
   return {
     name: "@useparcel/tape-html",
     exts: [".html"],

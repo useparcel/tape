@@ -1,7 +1,7 @@
 import { tape } from "../tape/index.ts";
-import CSSPlugin from "./index.js";
+import { css } from "./index.js";
 
-describe("CSSPlugin", () => {
+describe("CSS Plugin", () => {
   test("should gather imported urls as dependencies", async () => {
     await expect(
       tape({
@@ -166,7 +166,7 @@ describe("CSSPlugin", () => {
           content: `@import 'missing-file.css'`,
         },
       },
-      plugins: [[CSSPlugin, { ignoreMissingAssets: true }]],
+      plugins: [[css, { ignoreMissingAssets: true }]],
     };
 
     const results = await tape(config);

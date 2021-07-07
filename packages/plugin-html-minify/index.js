@@ -1,7 +1,7 @@
 import { crush, defaults, version } from "html-crush";
 import stripComments from "strip-html-comments";
 
-export default function (config) {
+export function htmlMinify(config) {
   config = {
     ...defaults,
     ...config,

@@ -1,11 +1,11 @@
 import { tape } from "../tape/index.ts";
-import CSSInlinePlugin from "./index.js";
+import { cssInline } from "./index.js";
 
-describe("CSSInlinePlugin", () => {
+describe("CSS inline plugin", () => {
   test("should inline the css", async () => {
     const results = await tape({
       entry: "/index.html",
-      plugins: [CSSInlinePlugin],
+      plugins: [cssInline],
       files: {
         "/index.html": {
           content: `

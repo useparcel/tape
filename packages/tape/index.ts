@@ -1,8 +1,6 @@
 import {
   has,
   defaults,
-  keys,
-  omit,
   mapKeys,
   mapValues,
   castArray,
@@ -20,8 +18,8 @@ import {
 import { DepGraph as Graph } from "dependency-graph";
 import { extname, dirname, basename, resolve as resolvePath } from "path";
 import md5 from "md5";
-import HTMLPlugin from "@useparcel/tape-html";
-import CSSPlugin from "@useparcel/tape-css";
+import { html as htmlPlugin } from "@useparcel/tape-html";
+import { css as cssPlugin } from "@useparcel/tape-css";
 import isValidFilename from "valid-filename";
 import { generateReporter, addReporterContext } from "./reporter";
 import WritePlugin from "./default-write-plugin";
@@ -792,11 +790,11 @@ function loadPlugins(pluginLoaders: PluginLoader[]) {
     // force HTML support
     ...(plugins.find(({ name }) => name === "@useparcel/tape-html")
       ? []
-      : [HTMLPlugin()]),
+      : [htmlPlugin()]),
     // force CSS support
     ...(plugins.find(({ name }) => name === "@useparcel/tape-css")
       ? []
-      : [CSSPlugin()]),
+      : [cssPlugin()]),
     ...plugins,
     // if no write plugin is given, add in the default one
     ...(plugins.find(({ write }) => isFunction(write)) ? [] : [WritePlugin]),

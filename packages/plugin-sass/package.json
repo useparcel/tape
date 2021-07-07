@@ -1,8 +1,8 @@
 {
   "name": "@useparcel/tape-sass",
   "version": "0.5.0",
-  "description": "",
   "main": "dist/index.js",
+  "types": "./index.d.ts",
   "author": "Avi Goldman <avi@useparcel.com>",
   "license": "MIT",
   "homepage": "https://github.com/useparcel/tape/tree/main/packages/plugin-sass",
@@ -14,6 +14,9 @@
   "dependencies": {
     "sass": "^1.28.0",
     "sass.js": "^0.11.1"
+  },
+  "devDependencies": {
+    "@useparcel/tape": "^0.5.0"
   },
   "publishConfig": {
     "access": "public"

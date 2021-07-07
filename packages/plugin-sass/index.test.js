@@ -1,11 +1,11 @@
 import { tape } from "../tape/index.ts";
-import SassPlugin from "./index.js";
+import { sass } from "./index.js";
 
-describe("SassPlugin", () => {
+describe("sass plugin", () => {
   test("should convert an external sass file to css", async () => {
     const results = await tape({
       entry: "/index.html",
-      plugins: [SassPlugin],
+      plugins: [sass],
       files: {
         "/index.html": {
           content: `
@@ -37,7 +37,7 @@ describe("SassPlugin", () => {
   test("should convert embedded sass to css", async () => {
     const results = await tape({
       entry: "/index.html",
-      plugins: [SassPlugin],
+      plugins: [sass],
       files: {
         "/index.html": {
           content: `
@@ -67,7 +67,7 @@ describe("SassPlugin", () => {
     await expect(
       tape({
         entry: "/index.html",
-        plugins: [SassPlugin],
+        plugins: [sass],
         files: {
           "/index.html": {
             content: `

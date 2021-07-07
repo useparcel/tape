@@ -17,7 +17,7 @@ url.resolve = (fromUrl, toUrl) => {
  */
 import juice from "juice/index.js";
 
-export default function (config = {}) {
+export function cssInline(config = {}) {
   return {
     name: "@useparcel/tape-css-inline",
     exts: [".html"],

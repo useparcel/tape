@@ -30,7 +30,7 @@ const handler = (cb) => (err, result) => {
   }
 };
 
-export default function () {
+export function sass() {
   return {
     name: "@useparcel/tape-sass",
     exts: [".scss", ".sass"],

@@ -2,7 +2,7 @@ import MagicString from "magic-string";
 import isAbsoluteUrl from "is-absolute-url";
 import findCSSDependencies from "find-css-dependencies";
 
-export default function ({ ignoreMissingAssets = false } = {}) {
+export function css({ ignoreMissingAssets = false } = {}) {
   return {
     name: "@useparcel/tape-css",
     exts: [".css"],

@@ -2,6 +2,7 @@
   "name": "@useparcel/tape-html-prettify",
   "version": "0.5.0",
   "main": "dist/index.js",
+  "types": "./index.d.ts",
   "author": "Avi Goldman <avi@useparcel.com>",
   "license": "MIT",
   "homepage": "https://github.com/useparcel/tape/tree/main/packages/plugin-html-prettify",
@@ -12,6 +13,9 @@
   },
   "dependencies": {
     "pretty": "^2.0.0"
+  },
+  "devDependencies": {
+    "@useparcel/tape": "^0.5.0"
   },
   "publishConfig": {
     "access": "public"

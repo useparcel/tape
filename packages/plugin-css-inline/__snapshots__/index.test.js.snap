@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`CSSInlinePlugin should inline the css 1`] = `
+exports[`CSS inline plugin should inline the css 1`] = `
 Object {
   "diagnostics": Array [],
   "entry": "/index.html",
