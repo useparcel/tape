@@ -2,7 +2,7 @@
   "name": "root",
   "private": true,
   "scripts": {
-    "clean": "rm **/bundle.js* && rm -rf **/node_modules",
+    "clean": "find . -name \"dist\" -type d -prune -exec rm -rf '{}' + && find . -name \"node_modules\" -type d -prune -exec rm -rf '{}' +",
     "bootstrap": "npm install &&  npx lerna bootstrap --force-local && npx lerna link --force-local",
     "dev": "npx webpack --mode development --watch",
     "build": "npx webpack --mode production",
