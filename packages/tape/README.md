@@ -46,7 +46,7 @@ const results = await tape({
           <body>
           </body>
         </html>`
-    }
+    },
     '/style.css': {
       content: `
         body {
