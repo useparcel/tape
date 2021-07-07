@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "clean": "rm **/bundle.js* && rm -rf **/node_modules",
-    "bootstrap": "npm install && npx lerna bootstrap",
+    "bootstrap": "npm install &&  npx lerna bootstrap --force-local && npx lerna link --force-local",
     "dev": "npx webpack --mode development --watch",
     "build": "npx webpack --mode production",
     "test": "jest",
