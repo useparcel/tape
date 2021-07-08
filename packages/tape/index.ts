@@ -136,7 +136,7 @@ class Tape {
    * @param  {Object} options.context The previous context of a compliation
    *                                  used to skip compiling unchanged files
    */
-  async #compile({ context = {} } = {}) {
+  async #compile() {
     const self = this;
     const pathToId = this.#pathToId.bind(self);
 
@@ -156,13 +156,13 @@ class Tape {
       packagedAssets: { [path: string]: Asset };
       resolveMap: { [id: string]: string };
       diagnostics: Diagnostic[];
-    } = defaults({}, context, {
+    } = {
       graph: new Graph<any>(),
       transformedAssets: {},
       packagedAssets: {},
       resolveMap: {},
       diagnostics: [],
-    });
+    };
 
     /**
      * Registers an asset dependency
