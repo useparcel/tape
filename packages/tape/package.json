@@ -1,6 +1,6 @@
 {
   "name": "@useparcel/tape",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "A browser-based HTML build tool",
   "main": "dist/index.js",
   "types": "./index.d.ts",
@@ -13,8 +13,8 @@
     "directory": "packages/tape"
   },
   "dependencies": {
-    "@useparcel/tape-css": "^0.6.0",
-    "@useparcel/tape-html": "^0.6.0",
+    "@useparcel/tape-css": "^0.6.1",
+    "@useparcel/tape-html": "^0.6.1",
     "dependency-graph": "^0.11.0",
     "lodash": "^4.17.20",
     "md5": "^2.3.0",

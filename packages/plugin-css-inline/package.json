@@ -1,6 +1,6 @@
 {
   "name": "@useparcel/tape-css-inline",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "main": "dist/index.js",
   "types": "./index.d.ts",
   "author": "Avi Goldman <avi@useparcel.com>",
@@ -16,7 +16,7 @@
     "juice": "^7.0.0"
   },
   "devDependencies": {
-    "@useparcel/tape": "^0.6.0"
+    "@useparcel/tape": "^0.6.1"
   },
   "publishConfig": {
     "access": "public"
