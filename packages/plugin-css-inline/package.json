@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "isomorphic-fetch": "^3.0.0",
-    "juice": "^7.0.0"
+    "juice": "^8.0.0"
   },
   "devDependencies": {
     "@useparcel/tape": "^0.6.1"
