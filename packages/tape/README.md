@@ -90,7 +90,7 @@ If it is an function it should take a path as the only parameter and return the 
 ```js
 import { readFile } from 'fs/promises';
 
-const fileLoader(path) {
+async function fileLoader(path) {
   const content = await readFile(path, 'utf8');
   return { content }
 }
