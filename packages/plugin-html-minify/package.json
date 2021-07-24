@@ -12,7 +12,7 @@
     "directory": "packages/plugin-html-minify"
   },
   "dependencies": {
-    "html-crush": "^2.0.10",
+    "html-crush": "^4.2.0",
     "strip-html-comments": "^1.0.0"
   },
   "devDependencies": {
